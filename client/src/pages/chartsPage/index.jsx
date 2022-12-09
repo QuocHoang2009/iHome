@@ -6,7 +6,7 @@ const ChartsPage = () => {
     return (
         <DefaultLayout>
             <Box m="20px">
-                <HeaderChild title="Charts"/>
+                <HeaderChild title="Charts" subtitle="All charts here!" />
                 <div>ChartsPage</div>
             </Box>
         </DefaultLayout>

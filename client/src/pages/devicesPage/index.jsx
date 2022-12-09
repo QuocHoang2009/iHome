@@ -10,7 +10,12 @@ const DevicesPage = () => {
     return (
         <DefaultLayout>
             <Box m="20px">
-                <HeaderChild title="Devices" addButton="add Device" buttonHandle={buttonHandle} />
+                <HeaderChild 
+                    title="Devices"
+                    subtitle="Managing the Devices" 
+                    addButton="Add Device" 
+                    buttonHandle={buttonHandle} 
+                />
                 <div>DevicesPage</div>
             </Box>
         </DefaultLayout>

@@ -5,8 +5,8 @@ const HeaderChild = ({ title, subtitle, addButton, buttonHandle }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   return (
-    <Box mb="30px">
-      <Box display="flex" justifyContent="space-between">
+    <Box mb="30px"  display="flex" justifyContent="space-between">
+      <Box>
         <Typography
           variant="h2"
           color={colors.grey[100]}
@@ -18,10 +18,12 @@ const HeaderChild = ({ title, subtitle, addButton, buttonHandle }) => {
         <Typography variant="h5" color={colors.greenAccent[400]}>
           {subtitle}
         </Typography>
-      
+      </Box>
+
       {(addButton) && (
         <Box
           width="150px"
+          height="40px"
           m="0"
           p="5px"
           display="flex"
@@ -42,7 +44,6 @@ const HeaderChild = ({ title, subtitle, addButton, buttonHandle }) => {
             </Typography>
         </Box>
       )}
-      </Box>
     </Box>
   );
 };

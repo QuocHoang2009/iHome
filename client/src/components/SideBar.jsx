@@ -1,7 +1,6 @@
-import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import { Box, IconButton, Stack, Typography, useTheme } from "@mui/material";
+import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { Menu, MenuItem, ProSidebar } from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
@@ -56,7 +55,6 @@ const Sidebar = () => {
       }}
     >
       <ProSidebar collapsed={isCollapsed}>
-        <Stack justifyContent="space-between" height="100%">
             <Menu iconShape="square">
             {/* LOGO AND MENU ICON */}
             <MenuItem
@@ -157,25 +155,6 @@ const Sidebar = () => {
                     })}
             </Box>
             </Menu>
-            <Menu iconShape="square">
-                <Box paddingLeft={isCollapsed ? undefined : "10%"}>
-                    <Item
-                        title="Contacts Information"
-                        to="/contacts"
-                        icon={<ContactsOutlinedIcon />}
-                        selected={selected}
-                        setSelected={setSelected}
-                    />
-                    <Item
-                        title="FAQ Page"
-                        to="/faq"
-                        icon={<HelpOutlineOutlinedIcon />}
-                        selected={selected}
-                        setSelected={setSelected}
-                    />
-                </Box>
-            </Menu>
-        </Stack>
       </ProSidebar>
     </Box>
   );

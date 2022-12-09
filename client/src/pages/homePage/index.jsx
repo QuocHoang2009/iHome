@@ -6,7 +6,7 @@ const HomePage = () => {
     return (
         <DefaultLayout>
             <Box m="20px">
-                <HeaderChild title="My Home"/>
+                <HeaderChild title="My Home" subtitle="Information Home" />
                 <div>Home</div>
             </Box>
         </DefaultLayout>
