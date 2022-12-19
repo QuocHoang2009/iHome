@@ -48,8 +48,8 @@ const RoomsPage = () => {
         }
     ]
 
-    const handleChange = (id, state)=>{
-        rooms[id - 1].state = !state;
+    const handleChange = ()=>{
+        console.log("0");
     }
 
     const columns = [
@@ -58,17 +58,29 @@ const RoomsPage = () => {
           field: "name",
           headerName: "Name",
           flex: 3,
-          cellClassName: "name-column--cell",
+          renderCell: ({ row: { name } }) => {
+            return (
+              <Box 
+                sx={{
+                    ":hover":{
+                        cursor: "pointer",
+                    }
+                }}
+              >
+                {name}
+              </Box>
+            );
+          },
         },
         {
           field: "state",
           headerName: "State",
           flex: 1,
-          renderCell: ({ row: { id, relay, state } }) => {
+          renderCell: ({ row: { relay, state } }) => {
             return (
               <Box>
                     {relay? (
-                        <Switch checked={state} onChange={handleChange(id, state)}/>
+                        <Switch checked={state} onChange={handleChange(state)}/>
                     ) : (
                         <FormControlLabel disabled control={<Switch />} />
                     )}
@@ -91,8 +103,8 @@ const RoomsPage = () => {
             <Box m="20px">
                 <HeaderChild 
                     title="Rooms" 
-                    subtitle="Managing the Members"  
-                    addButton="Add Room" 
+                    subtitle="Managing the Rooms"  
+                    addButton="Add Room"
                     buttonHandle={buttonHandle}
                 />
                 {(isAdd && (

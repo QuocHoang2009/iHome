@@ -1,5 +1,6 @@
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import DevicesOtherIcon from "@mui/icons-material/DevicesOther";
+import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import DoorFrontIcon from "@mui/icons-material/DoorFront";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -11,6 +12,7 @@ import DevicesPage from "../pages/devicesPage";
 import FAQPage from "../pages/faqPage";
 import HomePage from "../pages/homePage";
 import MembersPage from "../pages/membersPage";
+import NodesPage from "../pages/nodesPage";
 import RoomsPage from "../pages/roomsPage";
 
 const sidebarItems = [
@@ -37,6 +39,12 @@ const sidebarItems = [
     path: "/devices",
     icon: <DevicesOtherIcon />,
     component: <DevicesPage />,
+  },
+  {
+    title: "Nodes",
+    path: "/nodes",
+    icon: <DeviceThermostatIcon />,
+    component: <NodesPage />,
   },
   {
     title: "Charts",
