@@ -11,8 +11,8 @@ export const register = async (req, res) => {
       email,
       userName,
       password,
+      age,
       picturePath,
-      friends,
       location,
     } = req.body;
 
@@ -25,8 +25,8 @@ export const register = async (req, res) => {
       email,
       userName,
       password: passwordHash,
+      age,
       picturePath,
-      friends,
       location,
     });
     const savedUser = await newUser.save();
@@ -39,7 +39,8 @@ export const register = async (req, res) => {
 /* LOGGING IN */
 export const login = async (req, res) => {
   try {
-    const { userName, password } = req.body;
+    const { body } = req.body;
+    const { userName, password } = body;
     const user = await User.findOne({ userName: userName });
     if (!user) return res.status(400).json({ msg: "User does not exist. " });
 

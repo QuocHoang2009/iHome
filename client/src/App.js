@@ -16,7 +16,7 @@ function App() {
           <BrowserRouter>
             <CssBaseline />
             <Routes>
-              <Route path="/" element={<LoginPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/profile/:userId" element={<ProfilePage />} />
               {sidebarItems.map((item, key) => {
                 let pages = item.component;

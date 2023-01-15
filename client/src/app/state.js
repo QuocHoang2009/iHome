@@ -1,17 +1,23 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
+  mode: "light",
   user: null,
   token: null,
-  currentHome: null,
   homes: [],
+  currentHome: null,
+  rooms: [],
 };
 
 export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    setMode: (state) => {
+      state.mode = state.mode === "light" ? "dark" : "light";
+    },
     setLogin: (state, action) => {
+      console.log(action.payload);
       state.user = action.payload.user;
       state.token = action.payload.token;
     },
@@ -20,10 +26,13 @@ export const authSlice = createSlice({
       state.token = null;
     },
     setHomes: (state, action) => {
-      state.homes = action.payload.posts;
+      state.homes = action.payload.friends;
     },
     setCurrentHome: (state, action) => {
-      state.home = action.payload.home;
+      state.currentHome = action.payload.currentHome;
+    },
+    setRooms: (state, action) => {
+      state.rooms = action.payload.rooms;
     },
   },
 });
@@ -32,8 +41,9 @@ export const {
   setMode,
   setLogin,
   setLogout,
-  setFriends,
   setHomes,
   setCurrentHome,
+  setRooms,
 } = authSlice.actions;
+
 export default authSlice.reducer;
