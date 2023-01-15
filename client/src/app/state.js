@@ -1,6 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
+  selected: "Home",
+  isCollapsed: false,
   mode: "light",
   user: null,
   token: null,
@@ -13,11 +15,16 @@ export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    setIsCollapsed: (state, action) => {
+      state.isCollapsed = action.payload.isCollapsed;
+    },
+    setSelected: (state, action) => {
+      state.selected = action.payload.selected;
+    },
     setMode: (state) => {
       state.mode = state.mode === "light" ? "dark" : "light";
     },
     setLogin: (state, action) => {
-      console.log(action.payload);
       state.user = action.payload.user;
       state.token = action.payload.token;
     },
@@ -38,6 +45,8 @@ export const authSlice = createSlice({
 });
 
 export const {
+  setIsCollapsed,
+  setSelected,
   setMode,
   setLogin,
   setLogout,

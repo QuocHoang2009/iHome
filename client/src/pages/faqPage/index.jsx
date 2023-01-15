@@ -5,7 +5,6 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Typography from "@mui/material/Typography";
 import { tokens } from "../../app/theme";
-import DefaultLayout from '../../components/DefaultLayout';
 import HeaderChild from '../../components/HeaderChild';
 
 const questions = [
@@ -32,28 +31,26 @@ const FAQPage = () => {
     const colors = tokens(theme.palette.mode);
 
     return (
-        <DefaultLayout>
-            <Box m="20px">
-                <HeaderChild  title="FAQ" subtitle="Frequently Asked Questions Page" />
-                
-                {questions.map(({question, reply}, index)=>{
-                    return (
-                        <Accordion defaultExpanded key={index}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography color={colors.greenAccent[500]} variant="h5">
-                                {question}
-                            </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                            <Typography>
-                                {reply}
-                            </Typography>
-                            </AccordionDetails>
-                        </Accordion>
-                    )
-                })}
-            </Box>
-        </DefaultLayout>
+        <Box m="20px">
+            <HeaderChild  title="FAQ" subtitle="Frequently Asked Questions Page" />
+            
+            {questions.map(({question, reply}, index)=>{
+                return (
+                    <Accordion defaultExpanded key={index}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography color={colors.greenAccent[500]} variant="h5">
+                            {question}
+                        </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                        <Typography>
+                            {reply}
+                        </Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                )
+            })}
+        </Box>
     )
 };
 

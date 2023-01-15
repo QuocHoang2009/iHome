@@ -1,23 +1,26 @@
-
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { useState } from "react";
 import { Menu, MenuItem, ProSidebar } from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { setIsCollapsed, setSelected } from "../app/state";
 import { tokens } from "../app/theme";
 import sidebarItems from "../const/sidebarItems";
 
-const Item = ({ title, to, icon, selected, setSelected }) => {
+const Item = ({ title, to, icon }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const selected = useSelector((state)=> state.selected);
+  const dispatch = useDispatch();
+  
   return (
     <MenuItem
       active={selected === title}
       style={{
         color: colors.grey[100],
       }}
-      onClick={() => setSelected(title)}
+      onClick={() => dispatch(setSelected({ selected: title}))}
       icon={icon}
     >
       <Typography>{title}</Typography>
@@ -29,9 +32,9 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
 const Sidebar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selected, setSelected] = useState("Dashboard");
+  const isCollapsed = useSelector((state)=> state.isCollapsed);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   return (
     <Box
@@ -64,7 +67,7 @@ const Sidebar = () => {
                 }}
             >
                 {isCollapsed ? (
-                    <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
+                    <IconButton onClick={() => dispatch(setIsCollapsed({ isCollapsed: !isCollapsed}))}>
                         <MenuOutlinedIcon />
                     </IconButton>
                 ) : (
@@ -74,12 +77,12 @@ const Sidebar = () => {
                     alignItems="center"
                     ml="15px"
                 >
-                    <Box onClick={()=>navigate('/home')}>
+                    <Box onClick={()=>navigate('/')}>
                         <Typography variant="h3" color={colors.grey[100]}>
-                        iHome
+                          iHome
                         </Typography>
                     </Box>
-                    <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
+                    <IconButton onClick={() => dispatch(setIsCollapsed({ isCollapsed: !isCollapsed}))}>
                     <MenuOutlinedIcon />
                     </IconButton>
                 </Box>
@@ -148,8 +151,6 @@ const Sidebar = () => {
                                 title={item.title}
                                 to={item.path}
                                 icon={item.icon}
-                                selected={selected}
-                                setSelected={setSelected}
                             />
                         )
                     })}

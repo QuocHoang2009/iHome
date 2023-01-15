@@ -4,7 +4,6 @@ import axios from "axios";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { tokens } from "../../app/theme";
-import DefaultLayout from '../../components/DefaultLayout';
 import HeaderChild from '../../components/HeaderChild';
 import { addNode, getAllNodes } from '../../const/API';
 
@@ -68,58 +67,56 @@ const NodesPage = () => {
     ];
     
     return (
-        <DefaultLayout>
-            <Box m="20px">
-                <HeaderChild 
-                    title="Nodes"
-                    subtitle="Managing the Nodes" 
-                    addButton="Add Node" 
-                    buttonHandle={buttonHandle} 
-                />
-                <Box
-                    m="40px 0 0 0"
-                    height="68vh"
-                    sx={{
-                    "& .MuiDataGrid-root": {
-                        border: "none",
-                    },
-                    "& .MuiDataGrid-cell": {
-                        borderBottom: "none",
-                    },
-                    "& .name-column--cell": {
-                        color: colors.greenAccent[300],
-                    },
-                    "& .MuiDataGrid-columnHeaders": {
-                        backgroundColor: colors.blueAccent[700],
-                        borderBottom: "none",
-                    },
-                    "& .MuiDataGrid-virtualScroller": {
-                        backgroundColor: colors.primary[400],
-                    },
-                    "& .MuiDataGrid-footerContainer": {
-                        borderTop: "none",
-                        backgroundColor: colors.blueAccent[700],
-                    },
-                    "& .MuiCheckbox-root": {
-                        color: `${colors.greenAccent[200]} !important`,
-                    },
-                    }}
-                >
-                    {nodes && <DataGrid 
-                      rows={nodes?.map((node, index)=>{
-                        return {
-                            ...node,
-                            id: index + 1
-                        }
-                    })} 
-                      columns={columns} 
-                      pageSize={7}
-                      rowsPerPageOptions={[7]}
-                      disableSelectionOnClick
-                    />}
-                </Box>
+        <Box m="20px">
+            <HeaderChild 
+                title="Nodes"
+                subtitle="Managing the Nodes" 
+                addButton="Add Node" 
+                buttonHandle={buttonHandle} 
+            />
+            <Box
+                m="40px 0 0 0"
+                height="68vh"
+                sx={{
+                "& .MuiDataGrid-root": {
+                    border: "none",
+                },
+                "& .MuiDataGrid-cell": {
+                    borderBottom: "none",
+                },
+                "& .name-column--cell": {
+                    color: colors.greenAccent[300],
+                },
+                "& .MuiDataGrid-columnHeaders": {
+                    backgroundColor: colors.blueAccent[700],
+                    borderBottom: "none",
+                },
+                "& .MuiDataGrid-virtualScroller": {
+                    backgroundColor: colors.primary[400],
+                },
+                "& .MuiDataGrid-footerContainer": {
+                    borderTop: "none",
+                    backgroundColor: colors.blueAccent[700],
+                },
+                "& .MuiCheckbox-root": {
+                    color: `${colors.greenAccent[200]} !important`,
+                },
+                }}
+            >
+                {nodes && <DataGrid 
+                    rows={nodes?.map((node, index)=>{
+                    return {
+                        ...node,
+                        id: index + 1
+                    }
+                })} 
+                    columns={columns} 
+                    pageSize={7}
+                    rowsPerPageOptions={[7]}
+                    disableSelectionOnClick
+                />}
             </Box>
-        </DefaultLayout>
+        </Box>
     )
 };
 

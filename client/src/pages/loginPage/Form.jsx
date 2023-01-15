@@ -100,7 +100,7 @@ const Form = () => {
             );
 
             onSubmitProps.resetForm();
-            navigate("/home");
+            navigate("/");
         })
         .catch((error) => {
             if(error?.response){

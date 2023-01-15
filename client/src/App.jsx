@@ -1,12 +1,15 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ColorModeContext, useMode } from "./app/theme";
-import sidebarItems from "./const/sidebarItems";
+import Pages from "./pages";
 import LoginPage from "./pages/loginPage";
 import ProfilePage from "./pages/profilePage";
 
-function App() {
+const App = () => {
   const [theme, colorMode] = useMode();
+  //const Navigate = useNavigate();
+  const isAuth = Boolean(useSelector((state)=> state.token));
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -17,11 +20,8 @@ function App() {
             <CssBaseline />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/profile/:userId" element={<ProfilePage />} />
-              {sidebarItems.map((item, key) => {
-                let pages = item.component;
-                return <Route key={key} path={item.path} element={pages} />;
-              })}
+              <Route path="/profile/:userId" element={isAuth ? <ProfilePage /> : <Navigate to="/login" />} />
+              <Route path="/*" element={isAuth ? <Pages /> : <Navigate to="/login" />}/>
             </Routes>
           </BrowserRouter>
         </div>

@@ -4,7 +4,6 @@ import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import { Box, Typography, useTheme } from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../app/theme";
-import DefaultLayout from '../../components/DefaultLayout';
 import HeaderChild from '../../components/HeaderChild';
 
 const MembersPage = () => {
@@ -98,54 +97,59 @@ const MembersPage = () => {
         console.log("add member");
     }
 
+    const handleRowClick = ()=>{
+      console.log("rowClick");
+    }
+
     return (
-        <DefaultLayout>
-            <Box m="20px">
-                <HeaderChild 
-                    title="Members" 
-                    subtitle="Managing the Members" 
-                    addButton="Add Members" 
-                    buttonHandle={buttonHandle}
-                />
-                <Box
-                    m="40px 0 0 0"
-                    height="68vh"
-                    sx={{
-                    "& .MuiDataGrid-root": {
-                        border: "none",
-                    },
-                    "& .MuiDataGrid-cell": {
-                        borderBottom: "none",
-                    },
-                    "& .name-column--cell": {
-                        color: colors.greenAccent[300],
-                    },
-                    "& .MuiDataGrid-columnHeaders": {
-                        backgroundColor: colors.blueAccent[700],
-                        borderBottom: "none",
-                    },
-                    "& .MuiDataGrid-virtualScroller": {
-                        backgroundColor: colors.primary[400],
-                    },
-                    "& .MuiDataGrid-footerContainer": {
-                        borderTop: "none",
-                        backgroundColor: colors.blueAccent[700],
-                    },
-                    "& .MuiCheckbox-root": {
-                        color: `${colors.greenAccent[200]} !important`,
-                    },
-                    }}
-                >
-                    <DataGrid 
-                      rows={mockDataTeam} 
-                      columns={columns} 
-                      pageSize={7}
-                      rowsPerPageOptions={[7]}
-                      disableSelectionOnClick
-                    />
-                </Box>
-            </Box>
-        </DefaultLayout>
+      <Box m="20px">
+          <HeaderChild 
+              title="Members" 
+              subtitle="Managing the Members" 
+              addButton="Add Members" 
+              buttonHandle={buttonHandle}
+          />
+
+          <Box
+              m="40px 0 0 0"
+              height="68vh"
+              sx={{
+              "& .MuiDataGrid-root": {
+                  border: "none",
+              },
+              "& .MuiDataGrid-cell": {
+                  borderBottom: "none",
+                  "cursor": "pointer",
+              },
+              "& .name-column--cell": {
+                  color: colors.greenAccent[300],
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                  backgroundColor: colors.blueAccent[700],
+                  borderBottom: "none",
+              },
+              "& .MuiDataGrid-virtualScroller": {
+                  backgroundColor: colors.primary[400],
+              },
+              "& .MuiDataGrid-footerContainer": {
+                  borderTop: "none",
+                  backgroundColor: colors.blueAccent[700],
+              },
+              "& .MuiCheckbox-root": {
+                  color: `${colors.greenAccent[200]} !important`,
+              },
+            }}
+          >
+              <DataGrid 
+                rows={mockDataTeam} 
+                columns={columns} 
+                pageSize={7}
+                rowsPerPageOptions={[7]}
+                disableSelectionOnClick
+                onRowClick={handleRowClick}
+              />
+          </Box>
+      </Box>
     )
 };
 

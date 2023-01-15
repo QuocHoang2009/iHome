@@ -1,6 +1,6 @@
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import DevicesOtherIcon from "@mui/icons-material/DevicesOther";
-import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
+import DeviceThermostatIcon from "@mui/icons-material/DeviceThermostat";
 import DoorFrontIcon from "@mui/icons-material/DoorFront";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -18,51 +18,51 @@ import RoomsPage from "../pages/roomsPage";
 const sidebarItems = [
   {
     title: "Home",
-    path: "/home",
+    path: "/",
     icon: <HomeOutlinedIcon />,
-    component: <HomePage />,
+    component: HomePage,
   },
   {
     title: "Members",
     path: "/members",
     icon: <PeopleOutlinedIcon />,
-    component: <MembersPage />,
+    component: MembersPage,
   },
   {
     title: "Rooms",
     path: "/rooms",
     icon: <DoorFrontIcon />,
-    component: <RoomsPage />,
+    component: RoomsPage,
   },
   {
     title: "Devices",
     path: "/devices",
     icon: <DevicesOtherIcon />,
-    component: <DevicesPage />,
+    component: DevicesPage,
   },
   {
     title: "Nodes",
     path: "/nodes",
     icon: <DeviceThermostatIcon />,
-    component: <NodesPage />,
+    component: NodesPage,
   },
   {
     title: "Charts",
     path: "/charts",
     icon: <TimelineOutlinedIcon />,
-    component: <ChartsPage />,
+    component: ChartsPage,
   },
   {
     title: "Contacts Information",
     path: "/contacts",
     icon: <ContactsOutlinedIcon />,
-    component: <ContactsPage />,
+    component: ContactsPage,
   },
   {
     title: "FAQ Page",
     path: "/faq",
     icon: <HelpOutlineOutlinedIcon />,
-    component: <FAQPage />,
+    component: FAQPage,
   },
 ];
 
