@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { setIsCollapsed, setSelected } from "../app/state";
 import { tokens } from "../app/theme";
+import { getImg } from "../const/API";
 import sidebarItems from "../const/sidebarItems";
 
 const Item = ({ title, to, icon }) => {
@@ -29,33 +30,37 @@ const Item = ({ title, to, icon }) => {
   );
 };
 
-const Sidebar = () => {
+const Sidebar = (props) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isCollapsed = useSelector((state)=> state.isCollapsed);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const handleClickOpen = props.handleClickOpen;
+  const currentHome = useSelector((state)=> state.currentHome)
 
   return (
     <Box
+        position="sticky"
+        top="0"
         height="100vh"
-      sx={{
-        "& .pro-sidebar-inner": {
-          background: `${colors.primary[400]} !important`,
-        },
-        "& .pro-icon-wrapper": {
-          backgroundColor: "transparent !important",
-        },
-        "& .pro-inner-item": {
-          padding: "5px 35px 5px 20px !important",
-        },
-        "& .pro-inner-item:hover": {
-          color: "#868dfb !important",
-        },
-        "& .pro-menu-item.active": {
-          color: "#6870fa !important",
-        },
-      }}
+        sx={{
+          "& .pro-sidebar-inner": {
+            background: `${colors.primary[400]} !important`,
+          },
+          "& .pro-icon-wrapper": {
+            backgroundColor: "transparent !important",
+          },
+          "& .pro-inner-item": {
+            padding: "5px 35px 5px 20px !important",
+          },
+          "& .pro-inner-item:hover": {
+            color: "#868dfb !important",
+          },
+          "& .pro-menu-item.active": {
+            color: "#6870fa !important",
+          },
+        }}
     >
       <ProSidebar collapsed={isCollapsed}>
             <Menu iconShape="square">
@@ -94,7 +99,7 @@ const Sidebar = () => {
                 display="flex" 
                 justifyContent="center" 
                 alignItems="center" 
-                onClick={()=> navigate("/homes")}
+                onClick={()=> handleClickOpen()}
                 sx={{
                     ":hover":{
                         opacity:0.8
@@ -102,11 +107,11 @@ const Sidebar = () => {
                 }}
                 >
                     <img
-                    alt="profile-user"
-                    width="50px"
-                    height="50px"
-                    src={"../../assets/avatar.jpg"}
-                    style={{ cursor: "pointer", borderRadius: "50%" }}
+                      alt="profile-user"
+                      width="50px"
+                      height="50px"
+                      src={getImg + `${currentHome.picturePath}`}
+                      style={{ cursor: "pointer", borderRadius: "50%" }}
                     />
                 </Box>
             ) : (
@@ -115,7 +120,7 @@ const Sidebar = () => {
                     display="flex" 
                     justifyContent="center" 
                     alignItems="center" 
-                    onClick={()=> navigate("/homes")}
+                    onClick={()=> handleClickOpen()}
                     sx={{
                         ":hover":{
                             opacity:0.8
@@ -123,11 +128,11 @@ const Sidebar = () => {
                     }}
                     >
                     <img
-                    alt="profile-user"
-                    width="100px"
-                    height="100px"
-                    src={`../../assets/avatar.jpg`}
-                    style={{ cursor: "pointer", borderRadius: "50%" }}
+                      alt="profile-user"
+                      width="100px"
+                      height="100px"
+                      src={getImg + `${currentHome.picturePath}`}
+                      style={{ cursor: "pointer", borderRadius: "50%" }}
                     />
                 </Box>
                 <Box textAlign="center">
@@ -137,7 +142,7 @@ const Sidebar = () => {
                     fontWeight="bold"
                     sx={{ m: "10px 0 0 0" }}
                     >
-                    My Home
+                      {currentHome ? currentHome.name : "Home"}
                     </Typography>
                 </Box>
                 </Box>

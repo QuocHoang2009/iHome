@@ -8,7 +8,6 @@ import ProfilePage from "./pages/profilePage";
 
 const App = () => {
   const [theme, colorMode] = useMode();
-  //const Navigate = useNavigate();
   const isAuth = Boolean(useSelector((state)=> state.token));
 
   return (

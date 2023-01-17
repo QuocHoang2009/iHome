@@ -33,7 +33,7 @@ export const authSlice = createSlice({
       state.token = null;
     },
     setHomes: (state, action) => {
-      state.homes = action.payload.friends;
+      state.homes = action.payload.homes;
     },
     setCurrentHome: (state, action) => {
       state.currentHome = action.payload.currentHome;
