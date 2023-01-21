@@ -32,9 +32,8 @@ const NodesSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
     },
-    isLink: {
-      type: Boolean,
-      required: true,
+    channels: {
+      type: Array,
     },
   },
   { timestamps: true }

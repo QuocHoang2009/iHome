@@ -8,12 +8,14 @@ import morgan from "morgan";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
-import "./components/mqtt.js";
 import { register } from "./controllers/auth.js";
 import authRoutes from "./routes/auth.js";
 import homesRoutes from "./routes/homes.js";
 import nodesRoutes from "./routes/nodes.js";
+import roomsRoutes from "./routes/rooms.js";
 import userRoutes from "./routes/users.js";
+
+import "./controllers/nodes.js";
 
 /* CONFIGURATIONS */
 const __filename = fileURLToPath(import.meta.url);
@@ -50,6 +52,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/nodes", nodesRoutes);
 app.use("/homes", homesRoutes);
+app.use("/rooms", roomsRoutes);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;

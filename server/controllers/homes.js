@@ -41,7 +41,6 @@ export const getAllHomes = async (req, res) => {
     });
 
     const homes = await Promise.all(promises);
-    console.log(homes);
     res.status(200).json(homes);
   } catch (err) {
     res.status(404).json({ message: err.message });
