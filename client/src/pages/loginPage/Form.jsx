@@ -143,16 +143,16 @@ const Form = () => {
                     {isRegister && (
                     <>
                         <TextField
-                        label="First Name"
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                        value={values.firstName}
-                        name="firstName"
-                        error={
-                            Boolean(touched.firstName) && Boolean(errors.firstName)
-                        }
-                        helperText={touched.firstName && errors.firstName}
-                        sx={{ gridColumn: "span 2" }}
+                            label="First Name"
+                            onBlur={handleBlur}
+                            onChange={handleChange}
+                            value={values.firstName}
+                            name="firstName"
+                            error={
+                                Boolean(touched.firstName) && Boolean(errors.firstName)
+                            }
+                            helperText={touched.firstName && errors.firstName}
+                            sx={{ gridColumn: "span 2" }}
                         />
                         <TextField
                             label="Last Name"
@@ -265,7 +265,7 @@ const Form = () => {
                             "&:hover": { color: colors.greenAccent[400] },
                         }}
                     >
-                    {isLogin ? "LOGIN" : "REGISTER"}
+                        {isLogin ? "LOGIN" : "REGISTER"}
                     </Button>
 
                     <Typography

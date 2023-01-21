@@ -112,7 +112,7 @@ const MembersPage = () => {
 
           <Box
               m="40px 0 0 0"
-              height="68vh"
+              height="60vh"
               sx={{
               "& .MuiDataGrid-root": {
                   border: "none",
@@ -143,8 +143,8 @@ const MembersPage = () => {
               <DataGrid 
                 rows={mockDataTeam} 
                 columns={columns} 
-                pageSize={7}
-                rowsPerPageOptions={[7]}
+                pageSize={100}
+                rowsPerPageOptions={[100]}
                 disableSelectionOnClick
                 onRowClick={handleRowClick}
               />

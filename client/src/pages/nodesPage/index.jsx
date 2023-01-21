@@ -1,31 +1,47 @@
-import { Box, useTheme } from '@mui/material';
+import { Alert, AlertTitle, Box, LinearProgress, useTheme } from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { tokens } from "../../app/theme";
 import HeaderChild from '../../components/HeaderChild';
 import { addNode, getAllNodes } from '../../const/API';
 
 const NodesPage = () => {
+    const theme = useTheme();
+    const colors = tokens(theme.palette.mode);
     const [nodes, setNodes] = useState();
-
     const [isReload, setIsReload] = useState();
+    const [isLineNear, setIsLineNear] = useState(false);
+    const [isAlert, setIsAlert] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const currentHome = useSelector((state)=> state.currentHome);
+    const apiAddNode = addNode + currentHome._id;
 
     const buttonHandle = ()=>{
-        axios.post(addNode, {
-            topic: 'mybk/down',
+        setIsLineNear(true);
+        axios.post(apiAddNode, {
+            topic: currentHome?.mqttPath,
           })
           .then((res) => {
-            console.log(res);
+            setIsLineNear(false);
+            setIsAlert(true);
+            if(res.data){
+                setIsReload(!isReload);
+                setIsSuccess(true);
+            }
+            else{
+                setIsSuccess(false);
+            }
+            setTimeout(()=>{
+                setIsAlert(false);
+            }, 10000);
           })
           .catch((error) => {
+            setIsLineNear(false);
             console.log(error);
           });
-
-        setTimeout(()=>{
-            setIsReload(!isReload);
-        }, 20000);
     }
 
     useEffect(()=>{
@@ -34,9 +50,6 @@ const NodesPage = () => {
             if (res.data) setNodes(res.data);
         })();
     }, [isReload]);
-
-    const theme = useTheme();
-    const colors = tokens(theme.palette.mode);
 
     const columns = [
         { 
@@ -74,9 +87,36 @@ const NodesPage = () => {
                 addButton="Add Node" 
                 buttonHandle={buttonHandle} 
             />
+
+            {(isLineNear && (
+                <Box >
+                    <LinearProgress color="success" />
+                </Box>
+            ))}
+
+            {(isAlert && !isSuccess && (
+                <Alert  
+                    severity="error" 
+                    onClose={() => {setIsAlert(false)}}
+                >
+                    <AlertTitle>Error</AlertTitle>
+                    Can not find any node! — <strong>Try again!</strong>
+                </Alert>
+            ))}
+
+            {(isAlert && isSuccess && (
+                <Alert  
+                    severity="success" 
+                    onClose={() => {setIsAlert(false)}}
+                >
+                    <AlertTitle>Success</AlertTitle>
+                    Find a node! — <strong>check it out!</strong>
+                </Alert>
+            ))}
+
             <Box
                 m="40px 0 0 0"
-                height="68vh"
+                height="60vh"
                 sx={{
                 "& .MuiDataGrid-root": {
                     border: "none",
@@ -111,8 +151,8 @@ const NodesPage = () => {
                     }
                 })} 
                     columns={columns} 
-                    pageSize={7}
-                    rowsPerPageOptions={[7]}
+                    pageSize={100}
+                    rowsPerPageOptions={[100]}
                     disableSelectionOnClick
                 />}
             </Box>

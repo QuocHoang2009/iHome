@@ -242,14 +242,14 @@ const SimpleDialog = (props) =>{
   
     return(
         <Dialog onClose={handleClose} open={open}>
-            <DialogTitle>Set home</DialogTitle>
+            <DialogTitle>SET HOME</DialogTitle>
             <List sx={{ pt: 0 }}>
                 {homes.map((home, index) => (
                     <ListItem disableGutters  key={index}>
                         <ListItemButton onClick={() => handleListItemClick(home)}>
                             <ListItemAvatar>
                                 {home?.picturePath ? 
-                                    <Avatar src = {getImg + `${home.picturePath}`}/>
+                                    <Avatar src = {getImg + `${home?.picturePath}`}/>
                                     :<Avatar sx={{ bgcolor: blue[100], color: blue[600] }}>
                                         <PersonIcon />
                                     </Avatar>}

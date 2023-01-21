@@ -110,7 +110,7 @@ const Sidebar = (props) => {
                       alt="profile-user"
                       width="50px"
                       height="50px"
-                      src={getImg + `${currentHome.picturePath}`}
+                      src={getImg + `${currentHome?.picturePath}`}
                       style={{ cursor: "pointer", borderRadius: "50%" }}
                     />
                 </Box>
@@ -131,7 +131,7 @@ const Sidebar = (props) => {
                       alt="profile-user"
                       width="100px"
                       height="100px"
-                      src={getImg + `${currentHome.picturePath}`}
+                      src={getImg + `${currentHome?.picturePath}`}
                       style={{ cursor: "pointer", borderRadius: "50%" }}
                     />
                 </Box>
@@ -142,7 +142,7 @@ const Sidebar = (props) => {
                     fontWeight="bold"
                     sx={{ m: "10px 0 0 0" }}
                     >
-                      {currentHome ? currentHome.name : "Home"}
+                      {currentHome ? currentHome?.name : "Home"}
                     </Typography>
                 </Box>
                 </Box>
