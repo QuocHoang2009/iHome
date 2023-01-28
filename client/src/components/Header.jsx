@@ -28,7 +28,7 @@ const Header = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event) => {
+  const handleClick = () => {
     setAnchorEl(true);
   };
   const handleClose = () => {
@@ -54,7 +54,7 @@ const Header = () => {
       </Box>
 
       <Box display="flex">
-      <Box 
+        <Box 
             display="flex" 
             justifyContent="center" 
             alignItems="center" 
@@ -73,6 +73,7 @@ const Header = () => {
             )}
           </IconButton>
         </Box>
+
         <Box 
             display="flex" 
             justifyContent="center" 
@@ -87,7 +88,7 @@ const Header = () => {
             <NotificationsOutlinedIcon />
           </IconButton>
         </Box>
-        
+      
         <Tooltip title="Account settings">
           <IconButton
             onClick={handleClick}
@@ -100,13 +101,12 @@ const Header = () => {
             <Avatar src={getImg + `${user?.picturePath}`} sx={{ width: 45, height: 45 }}/>
           </IconButton>
         </Tooltip>
-        
+      
         <Menu
-          anchorEl={anchorEl}
+          anchorEl={()=> {return anchorEl}}
           id="account-menu"
           open={open}
           onClose={handleClose}
-          onClick={handleClose}
           PaperProps={{
             elevation: 0,
             sx: {

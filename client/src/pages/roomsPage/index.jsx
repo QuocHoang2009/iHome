@@ -46,7 +46,7 @@ const RoomsPage = () => {
                 navigate('/login');
             }
         })();
-    }, [dispatch, home, isAdd, navigate, openModal]);
+    }, [dispatch, home, isAdd, navigate]);
 
     const rooms = useSelector((state)=> state.rooms);
 

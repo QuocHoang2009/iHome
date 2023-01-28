@@ -225,23 +225,21 @@ const ModalAddHome = (props)=>{
 
 const SimpleDialog = (props) =>{
     const { onClose, selectedValue, open } = props;
+    const [openModal, setOpenModal] = useState(false);
+    const handleOpenModal = () => setOpenModal(true);
+    const handleCloseModal = () => setOpenModal(false);
+    const homes = useSelector((state)=>state.homes);
+
+    const handleListItemClick = (value) => {
+        onClose(value);
+    };
 
     const handleClose = () => {
       onClose(selectedValue);
     };
-  
-    const handleListItemClick = (value) => {
-      onClose(value);
-    };
-
-    const homes = useSelector((state)=> state.homes);
-
-    const [openModal, setOpenModal] = useState(false);
-    const handleOpenModal = () => setOpenModal(true);
-    const handleCloseModal = () => setOpenModal(false);
-  
+    
     return(
-        <Dialog onClose={handleClose} open={open}>
+        <Dialog onClose={()=>handleClose()} open={open}>
             <DialogTitle>SET HOME</DialogTitle>
             <List sx={{ pt: 0 }}>
                 {homes.map((home, index) => (
@@ -249,7 +247,7 @@ const SimpleDialog = (props) =>{
                         <ListItemButton onClick={() => handleListItemClick(home)}>
                             <ListItemAvatar>
                                 {home?.picturePath ? 
-                                    <Avatar src = {getImg + `${home?.picturePath}`}/>
+                                    <Avatar src = {getImg + `${home.picturePath}`}/>
                                     :<Avatar sx={{ bgcolor: blue[100], color: blue[600] }}>
                                         <PersonIcon />
                                     </Avatar>}
@@ -259,17 +257,17 @@ const SimpleDialog = (props) =>{
                     </ListItem>
                 ))}
                 <ListItem disableGutters>
-                <ListItemButton
-                    autoFocus
-                    onClick={() => handleOpenModal()}
-                >
-                    <ListItemAvatar>
-                    <Avatar>
-                        <AddIcon />
-                    </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText primary="Add Home" />
-                </ListItemButton>
+                    <ListItemButton
+                        autoFocus
+                        onClick={() => handleOpenModal()}
+                    >
+                        <ListItemAvatar>
+                            <Avatar>
+                                <AddIcon />
+                            </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText primary="Add Home" />
+                    </ListItemButton>
                 </ListItem>
             </List>
             <ModalAddHome openModal={openModal} handleCloseModal={handleCloseModal}/>
@@ -279,7 +277,7 @@ const SimpleDialog = (props) =>{
 
 function DefaultLayout(props){
     const [open, setOpen] = useState(false);
-    const [selectedValue, setSelectedValue] = useState(null);
+    const [selectedValue, setSelectedValue] = useState(useSelector((state)=> state.currentHome));
     const dispatch = useDispatch();
   
     const handleClickOpen = () => {
@@ -294,7 +292,7 @@ function DefaultLayout(props){
 
     return (
         <Stack direction="row" width="100%">
-            <SideBar handleClickOpen={handleClickOpen}/>
+            <SideBar handleClickOpen={()=>handleClickOpen()}/>
             <Stack width="100%">
                 <Header />
                 {props.children}
