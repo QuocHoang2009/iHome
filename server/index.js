@@ -10,6 +10,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { register } from "./controllers/auth.js";
 import authRoutes from "./routes/auth.js";
+import devicesRoutes from "./routes/devices.js";
 import homesRoutes from "./routes/homes.js";
 import nodesRoutes from "./routes/nodes.js";
 import roomsRoutes from "./routes/rooms.js";
@@ -53,6 +54,7 @@ app.use("/users", userRoutes);
 app.use("/nodes", nodesRoutes);
 app.use("/homes", homesRoutes);
 app.use("/rooms", roomsRoutes);
+app.use("/devices", devicesRoutes);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;
