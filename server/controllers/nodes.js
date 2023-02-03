@@ -36,7 +36,7 @@ const mqttHandle = async (topic, payload) => {
 
 client.on("message", mqttHandle);
 
-const mqttSendMess = (topic, data) => {
+export const mqttSendMess = (topic, data) => {
   try {
     const dataConvert = JSON.stringify(data);
     client.publish(topic, dataConvert);
@@ -69,7 +69,8 @@ export const addNodes = async (req, res) => {
             channel: i + 1,
             isActive: true,
           });
-          channels[i] = await newChannel.save();
+          const channel = await newChannel.save();
+          channels[i] = channel._id;
         }
 
         const newNode = new Nodes({
@@ -96,7 +97,26 @@ export const addNodes = async (req, res) => {
 
 export const getAllNodes = async (req, res) => {
   try {
-    const allNodes = await Nodes.find();
+    let allNodes = await Nodes.find();
+
+    const promises = await allNodes.map(async (node) => {
+      if (node?.channels) {
+        const promises2 = await node.channels.map(async (channelId) => {
+          const channel = new Promise((resolve, reject) => {
+            resolve(Channels.findById(channelId));
+          });
+          return channel;
+        });
+
+        const channels = await Promise.all(promises2);
+        node.channels = channels;
+        return node;
+      }
+
+      return node;
+    });
+
+    allNodes = await Promise.all(promises);
     res.status(200).json(allNodes);
   } catch (err) {
     res.status(404).json({ message: err.message });

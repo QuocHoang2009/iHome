@@ -7,7 +7,6 @@ const DevicesSchema = new mongoose.Schema(
       required: true,
       min: 2,
       max: 50,
-      unique: true,
     },
     home: {
       type: Object,
@@ -15,6 +14,7 @@ const DevicesSchema = new mongoose.Schema(
     },
     room: {
       type: Object,
+      required: true,
     },
     relay: {
       type: Object,
