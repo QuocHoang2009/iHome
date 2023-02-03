@@ -239,11 +239,11 @@ const SimpleDialog = (props) =>{
     };
     
     return(
-        <Dialog onClose={()=>handleClose()} open={open}>
-            <DialogTitle>SET HOME</DialogTitle>
-            <List sx={{ pt: 0 }}>
+        <Dialog onClose={()=>handleClose()} open={open} >
+            <DialogTitle minWidth="200px">SET HOME</DialogTitle>
+            <List sx={{ pt: 0 }} >
                 {homes.map((home, index) => (
-                    <ListItem disableGutters  key={index}>
+                    <ListItem disableGutters  key={index} >
                         <ListItemButton onClick={() => handleListItemClick(home)}>
                             <ListItemAvatar>
                                 {home?.picturePath ? 
@@ -272,6 +272,7 @@ const SimpleDialog = (props) =>{
             </List>
             <ModalAddHome openModal={openModal} handleCloseModal={handleCloseModal}/>
         </Dialog>
+        
     )
 }
 

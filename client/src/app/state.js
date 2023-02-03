@@ -9,6 +9,7 @@ const initialState = {
   homes: [],
   currentHome: null,
   rooms: [],
+  nodes: [],
 };
 
 export const authSlice = createSlice({
@@ -41,6 +42,9 @@ export const authSlice = createSlice({
     setRooms: (state, action) => {
       state.rooms = action.payload.rooms;
     },
+    setNodes: (state, action) => {
+      state.nodes = action.payload.nodes;
+    },
   },
 });
 
@@ -53,6 +57,7 @@ export const {
   setHomes,
   setCurrentHome,
   setRooms,
+  setNodes,
 } = authSlice.actions;
 
 export default authSlice.reducer;

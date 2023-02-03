@@ -3,7 +3,8 @@ import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setNodes } from "../../app/state";
 import { tokens } from "../../app/theme";
 import HeaderChild from '../../components/HeaderChild';
 import { addNode, getAllNodes } from '../../const/API';
@@ -11,7 +12,8 @@ import { addNode, getAllNodes } from '../../const/API';
 const NodesPage = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
-    const [nodes, setNodes] = useState();
+    const dispatch = useDispatch();
+    const nodes = useSelector((state)=> state.nodes)
     const [isReload, setIsReload] = useState();
     const [isLineNear, setIsLineNear] = useState(false);
     const [isAlert, setIsAlert] = useState(false);
@@ -47,9 +49,9 @@ const NodesPage = () => {
     useEffect(()=>{
         (async () => {
             const res = await axios.get(getAllNodes);
-            if (res.data) setNodes(res.data);
+            if (res.data) dispatch(setNodes({nodes: res.data}));;
         })();
-    }, [isReload]);
+    }, [isReload, dispatch]);
 
     const columns = [
         { 

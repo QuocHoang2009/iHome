@@ -1,6 +1,10 @@
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, TextField, useTheme } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, FormControl, InputLabel, MenuItem, Select, TextField, useTheme } from "@mui/material";
 import FormControlLabel from '@mui/material/FormControlLabel';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
 import Switch from '@mui/material/Switch';
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
@@ -13,7 +17,7 @@ import { tokens } from "../../app/theme";
 import ButtonStyle from '../../components/ButtonStyle';
 import HeaderChild from '../../components/HeaderChild';
 import ModalDelete from '../../components/ModalDelete';
-import { addDevice, deviceApi, getAllDevices } from "../../const/API";
+import { addDevice, deviceApi, getAllDevices, linkDevice, updateDevice } from "../../const/API";
 
 const initialValues = {
     name: "",
@@ -23,31 +27,133 @@ const initialValues = {
 
 const checkoutSchema = yup.object().shape({
     name: yup.string().required("required"),
+    room: yup.string().required("required"),
 });
+
+const SimpleDialog = (props) =>{
+    const nodes = useSelector((state)=> state.nodes);
+    const relayNodes = nodes.filter(node=> node.type === "Relay");
+    const { onClose, selectedValue, open } = props;
+
+    const relays = relayNodes.map((relayNode)=>{
+        const channels = relayNode.channels.map((relayChannel)=>{
+            return relayChannel;
+        });
+
+        const relay = channels.map((channel)=> {
+            return  {...channel, ...relayNode};
+        });
+
+        return relay;
+    })
+    
+    let relayChannels =[];
+    for(let i = 0; i < relays.length; i++){
+        relayChannels = relayChannels.concat(relays[i]);
+    }
+
+    const handleListItemClick = (value) => {
+        onClose(value);
+    };
+
+    const handleClose = () => {
+      onClose(selectedValue);
+    };
+
+    const CheckChannel = (channel, key)=>{
+        channel = channel.channel;
+        console.log(channel);
+        if(channel?.linkWithDevice) return;
+        
+        return(
+            <ListItem disableGutters  key={key} >
+                <ListItemButton onClick={() => handleListItemClick(channel)}>
+                    <ListItemText primary={channel?.name + " channel " + channel?.channel} />
+                </ListItemButton>
+            </ListItem>
+        )
+    }
+    
+    return(
+        <Dialog onClose={()=>handleClose()} open={open} >
+            <DialogTitle minWidth="200px">SELECT RELAY CHANNEL</DialogTitle>
+            <List sx={{ pt: 0 }} >
+                {relayChannels.map((relay, index) => 
+                    <CheckChannel channel={relay} key={index}/>
+                )}
+                <ListItemButton onClick={() => handleListItemClick()}>
+                    <ListItemText primary={"Cancel"} />
+                </ListItemButton>
+            </List>
+        </Dialog> 
+    )
+}
 
 const DevicesPage = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const home = useSelector((state)=> state.currentHome);
+    const rooms = useSelector((state)=> state.rooms);
     const navigate = useNavigate();
     const [isAdd, setIsAdd] = useState(false);
     const [isReset, setIsReset] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [deviceSelect, setDeviceSelect] = useState();
     const [devices, setDevices] = useState([]);
+
+    const [openModalLink, setOpenModalLink] = useState(false);
+    const [selectedValueLink, setSelectedValueLink] = useState();
+
+    const handleClickOpenModalLink = () => {
+        setOpenModalLink(true);
+    };
+
+    const handleCloseModalLink = async (value) => {
+        setOpenModalLink(false);
+        if(value){
+            setSelectedValueLink(value);
+            const data = {
+                device: deviceSelect._id,
+                relay: {
+                    address: value.address,
+                    channel: value.channel
+                }
+            }
+
+            await axios.post(linkDevice, {
+                body: data,
+            })
+            .then((res) => {
+                setIsReset(!isReset);
+            })
+            .catch((error) => {
+                if(error?.response){
+                    console.log(error.response.data);
+                }
+                else{
+                    console.log(error);
+                }
+            });
+        }
+    };
     
     useEffect(()=>{
         (async () => {
             if(home?._id){
                 const apiGetDevices = getAllDevices + home?._id;
                 const res = await axios.get(apiGetDevices);
-                setDevices(res.data);
+                setDevices(res.data.map((device)=>{                
+                    const room = rooms.find(room=> room?._id === device.room);
+                    delete device.room;
+                    device.room = room;
+                    return device;
+                }));
             }
             else{
                 navigate('/login');
             }
         })();
-    }, [ home, isAdd, navigate, isReset]);
+    }, [ home, isAdd, navigate, isReset, rooms]);
 
     const columns = [
         { field: "id", headerName: "ID" },
@@ -57,15 +163,15 @@ const DevicesPage = () => {
             flex: 2,
             renderCell: ({ row: { name } }) => {
                 return (
-                <Box 
-                    sx={{
-                        ":hover":{
-                            cursor: "pointer",
-                        }
-                    }}
-                >
-                    {name}
-                </Box>
+                    <Box 
+                        sx={{
+                            ":hover":{
+                                cursor: "pointer",
+                            }
+                        }}
+                    >
+                        {name}
+                    </Box>
                 );
             },
         },
@@ -76,11 +182,7 @@ const DevicesPage = () => {
             renderCell: ({ row: { room } }) => {
                 return (
                     <Box>
-                        {!room ? (
-                            <ButtonStyle name="Add room" width="75px" height="35px"/>
-                        ) : (
-                            {room}
-                        )}
+                        {room?.name}
                     </Box>
                 );
             },
@@ -95,7 +197,7 @@ const DevicesPage = () => {
                         {!relay ? (
                             <ButtonStyle name="LINK" width="75px" height="35px"/>
                         ) : (
-                            <FormControlLabel value={state} control={<Switch />} />
+                            <FormControlLabel value={state} control={<Switch checked={state} />} />
                         )}
                     </Box>
                 );
@@ -172,13 +274,33 @@ const DevicesPage = () => {
         setOpenModal(true);
     }
 
-    const handleChangeState = (device)=>{
-        console.log(device);
+    const handleChangeState = async (device)=>{
+        const data = {
+            mqttPath: home.mqttPath,
+            relay: device.relay,
+            id: device._id,
+            state: !device.state
+        }
+
+        await axios.patch(updateDevice, {
+            body: data,
+        })
+        .then((res) => {
+            setIsReset(!isReset);
+        })
+        .catch((error) => {
+            if(error?.response){
+                console.log(error.response.data);
+            }
+            else{
+                console.log(error);
+            }
+        });
     }
 
     const handleLink = (device)=>{
         setDeviceSelect(device);
-        console.log(device)
+        handleClickOpenModalLink();
     }
 
     const handleClick = (params)=>{
@@ -231,7 +353,7 @@ const DevicesPage = () => {
                 }) => (
                     <form onSubmit={handleSubmit}>
                         <Box display="flex" justifyContent="space-between" m="20px 0" >
-                            <Box display="grid" height="45px" width="68%">
+                            <Box display="grid" height="45px" width="39%">
                                 <TextField
                                     label="Name"
                                     onBlur={handleBlur}
@@ -246,7 +368,30 @@ const DevicesPage = () => {
                                 />
                             </Box>
 
-                            <Box height="45px" width="30%">
+                            <Box  display="grid" height="45px" width="39%">
+                                <FormControl fullWidth>
+                                    <InputLabel>Room</InputLabel>
+                                    <Select                            
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={values.room}
+                                        label="room"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        name="room"
+                                        error={
+                                            Boolean(touched.room) && Boolean(errors.room)
+                                        }
+                                        sx={{ gridColumn: "span 4" }}
+                                    >
+                                        {rooms.map((room, key)=>{
+                                            return (<MenuItem value={room._id} key={key}>{room.name}</MenuItem>)
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box height="45px" width="20%">
                                 <Button
                                     fullWidth
                                     type="submit"
@@ -308,6 +453,12 @@ const DevicesPage = () => {
                     onCellClick={handleClick}
                 />
             </Box>
+
+            <SimpleDialog
+                selectedValue={selectedValueLink}
+                open={openModalLink}
+                onClose={handleCloseModalLink}
+            />
         </Box>
     )
 };
