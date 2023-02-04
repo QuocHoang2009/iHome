@@ -8,6 +8,7 @@ export const loginUser = host + "/auth/login";
 export const getAllNodes = host + "/nodes/all";
 export const getAllRelays = host + "/nodes/allrelay";
 export const addNode = host + "/nodes/addnode/";
+export const nodeApi = host + "/nodes/";
 
 //home
 export const getAllHomes = host + "/homes/all/";
@@ -18,6 +19,8 @@ export const addHome = host + "/homes/addhome/";
 export const getAllRooms = host + "/rooms/all/";
 export const addRoom = host + "/rooms/addroom";
 export const roomApi = host + "/rooms/";
+export const linkRoom = host + "/rooms/linkroom";
+export const updateRoom = host + "/rooms";
 
 //rooms
 export const getAllDevices = host + "/devices/all/";

@@ -27,7 +27,7 @@ const Pages = ()=>{
             {sidebarItems.map((item, key) => {
                 let Page = item.component;
                 return (
-                    <Route key={key} path={item.path} 
+                    <Route key={key} path={`${item.path}/*`}
                         element={
                         <DefaultLayout>
                             <Page />

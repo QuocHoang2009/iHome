@@ -1,5 +1,5 @@
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, Dialog, DialogTitle, TextField, useTheme } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, FormControl, InputLabel, MenuItem, Select, TextField, useTheme } from "@mui/material";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -10,23 +10,24 @@ import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import { Formik } from "formik";
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
-import { setRooms } from "../../app/state";
-import { tokens } from "../../app/theme";
-import ButtonStyle from '../../components/ButtonStyle';
-import HeaderChild from '../../components/HeaderChild';
-import ModalDelete from '../../components/ModalDelete';
-import { addRoom, getAllRooms, linkRoom, roomApi, updateRoom } from "../../const/API";
+import { tokens } from "../../../../app/theme";
+import ButtonStyle from '../../../../components/ButtonStyle';
+import HeaderChild from '../../../../components/HeaderChild';
+import ModalDelete from '../../../../components/ModalDelete';
+import { addDevice, deviceApi, getAllDevices, linkDevice, updateDevice } from "../../../../const/API";
 
 const initialValues = {
     name: "",
     home: "",
+    room: "",
 };
 
 const checkoutSchema = yup.object().shape({
     name: yup.string().required("required"),
+    room: yup.string().required("required"),
 });
 
 const SimpleDialog = (props) =>{
@@ -61,7 +62,7 @@ const SimpleDialog = (props) =>{
 
     const CheckChannel = (channel, key)=>{
         channel = channel.channel;
-        if(channel?.linkWithDevice) return;
+        if(channel?.link) return;
         
         return(
             <ListItem disableGutters  key={key} >
@@ -87,16 +88,17 @@ const SimpleDialog = (props) =>{
     )
 }
 
-const RoomsPage = () => {
+const MainPage = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const home = useSelector((state)=> state.currentHome);
-    const dispatch = useDispatch();
+    const rooms = useSelector((state)=> state.rooms);
     const navigate = useNavigate();
     const [isAdd, setIsAdd] = useState(false);
-    const [openModal, setOpenModal] = useState(false);
-    const [roomSelect, setRoomSelect] = useState();
     const [isReset, setIsReset] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
+    const [deviceSelect, setDeviceSelect] = useState();
+    const [devices, setDevices] = useState([]);
 
     const [openModalLink, setOpenModalLink] = useState(false);
     const [selectedValueLink, setSelectedValueLink] = useState();
@@ -110,14 +112,14 @@ const RoomsPage = () => {
         if(value){
             setSelectedValueLink(value);
             const data = {
-                room: roomSelect._id,
+                device: deviceSelect._id,
                 relay: {
                     address: value.address,
                     channel: value.channel
                 }
             }
-            
-            await axios.post(linkRoom, {
+
+            await axios.post(linkDevice, {
                 body: data,
             })
             .then((res) => {
@@ -134,39 +136,53 @@ const RoomsPage = () => {
         }
     };
     
-    
     useEffect(()=>{
         (async () => {
             if(home?._id){
-                const apiGetRooms = getAllRooms + home?._id;
-                const res = await axios.get(apiGetRooms);
-                dispatch(setRooms({rooms: res.data}));
+                const apiGetDevices = getAllDevices + home?._id;
+                const res = await axios.get(apiGetDevices);
+                setDevices(res.data.map((device)=>{                
+                    const room = rooms.find(room=> room?._id === device.room);
+                    delete device.room;
+                    device.room = room;
+                    return device;
+                }));
             }
             else{
                 navigate('/login');
             }
         })();
-    }, [dispatch, home, isAdd, navigate, isReset]);
-
-    const rooms = useSelector((state)=> state.rooms);
+    }, [ home, isAdd, navigate, isReset, rooms]);
 
     const columns = [
         { field: "id", headerName: "ID" },
         {
             field: "name",
             headerName: "Name",
-            flex: 3,
+            flex: 2,
             renderCell: ({ row: { name } }) => {
                 return (
-                <Box 
-                    sx={{
-                        ":hover":{
-                            cursor: "pointer",
-                        }
-                    }}
-                >
-                    {name}
-                </Box>
+                    <Box 
+                        sx={{
+                            ":hover":{
+                                cursor: "pointer",
+                            }
+                        }}
+                    >
+                        {name}
+                    </Box>
+                );
+            },
+        },
+        {
+            field: "room",
+            headerName: "Room",
+            flex: 1,
+            renderCell: ({ row: { room } }) => {
+                return (
+                    <Box>
+                        {room?.name}
+                    </Box>
                 );
             },
         },
@@ -206,20 +222,20 @@ const RoomsPage = () => {
         },
     ];
 
-
     const buttonHandle = ()=> setIsAdd(true);
 
-    const addRoomHandle = async (values, onSubmitProps)=>{
+    const addDeviceHandle = async (values, onSubmitProps)=>{
         values.home = home._id;
 
-        await axios.post(addRoom, {
+        await axios.post(addDevice, {
             body: values,
         })
         .then((res) => {
-            const room = res.data;
-            if(!room) return;
+            const device = res.data;
+            if(!device) return;
             onSubmitProps.resetForm();
             setIsAdd(false);
+            setIsReset(!isReset);
         })
         .catch((error) => {
             if(error?.response){
@@ -232,11 +248,11 @@ const RoomsPage = () => {
     }
     
     const handleFormSubmit  = async (values, onSubmitProps) => {
-        await addRoomHandle(values, onSubmitProps);
+        await addDeviceHandle(values, onSubmitProps);
     };
 
-    const handleDeleteRoom = async ()=>{
-        const api = roomApi + roomSelect._id;
+    const handleDeleteDevice = async ()=>{
+        const api = deviceApi + deviceSelect._id;
         await axios.delete(api)
         .then((res) => {
             setIsReset(!isReset);
@@ -252,20 +268,20 @@ const RoomsPage = () => {
         setOpenModal(false);
     }
 
-    const handleDelete = (room)=>{
-        setRoomSelect(room);
+    const handleDelete = (device)=>{
+        setDeviceSelect(device);
         setOpenModal(true);
     }
 
-    const handleChangeState = async (room)=>{
+    const handleChangeState = async (device)=>{
         const data = {
             mqttPath: home.mqttPath,
-            relay: room.relay,
-            id: room._id,
-            state: !room.state
+            relay: device.relay,
+            id: device._id,
+            state: !device.state
         }
 
-        await axios.patch(updateRoom, {
+        await axios.patch(updateDevice, {
             body: data,
         })
         .then((res) => {
@@ -281,8 +297,8 @@ const RoomsPage = () => {
         });
     }
 
-    const handleLink = (room)=>{
-        setRoomSelect(room);
+    const handleLink = (device)=>{
+        setDeviceSelect(device);
         handleClickOpenModalLink();
     }
 
@@ -291,7 +307,7 @@ const RoomsPage = () => {
             handleDelete(params.row);
         }
         else if(params.field === "name"){
-            navigate("/rooms/" + params.row._id);
+            navigate("/devices/" + params.row._id);
         }
         else if(params.field === "state"){
             if(params.row.relay){
@@ -306,9 +322,9 @@ const RoomsPage = () => {
     return (
         <Box m="20px">
             <HeaderChild 
-                title="Rooms" 
-                subtitle="Managing the Rooms"  
-                addButton="Add Room"
+                title="Devices" 
+                subtitle="Managing the Devices"  
+                addButton="Add Device"
                 buttonHandle={buttonHandle}
             />
 
@@ -316,8 +332,8 @@ const RoomsPage = () => {
                 <ModalDelete 
                     open={openModal} 
                     handleModal={setOpenModal} 
-                    name={roomSelect.name}
-                    handleDelete={handleDeleteRoom}
+                    name={deviceSelect.name}
+                    handleDelete={handleDeleteDevice}
                 />))}
 
             {(isAdd && (
@@ -336,7 +352,7 @@ const RoomsPage = () => {
                 }) => (
                     <form onSubmit={handleSubmit}>
                         <Box display="flex" justifyContent="space-between" m="20px 0" >
-                            <Box display="grid" height="45px" width="68%">
+                            <Box display="grid" height="45px" width="39%">
                                 <TextField
                                     label="Name"
                                     onBlur={handleBlur}
@@ -351,7 +367,30 @@ const RoomsPage = () => {
                                 />
                             </Box>
 
-                            <Box height="45px" width="30%">
+                            <Box  display="grid" height="45px" width="39%">
+                                <FormControl fullWidth>
+                                    <InputLabel>Room</InputLabel>
+                                    <Select                            
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={values.room}
+                                        label="room"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        name="room"
+                                        error={
+                                            Boolean(touched.room) && Boolean(errors.room)
+                                        }
+                                        sx={{ gridColumn: "span 4" }}
+                                    >
+                                        {rooms.map((room, key)=>{
+                                            return (<MenuItem value={room._id} key={key}>{room.name}</MenuItem>)
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box height="45px" width="20%">
                                 <Button
                                     fullWidth
                                     type="submit"
@@ -362,7 +401,7 @@ const RoomsPage = () => {
                                         "&:hover": { color: colors.greenAccent[400] },
                                     }}
                                 >
-                                    Create room
+                                    Create device
                                 </Button>
                             </Box>
                         </Box>
@@ -401,9 +440,9 @@ const RoomsPage = () => {
                 }}
             >
                 <DataGrid 
-                    rows={rooms?.map((room, index)=>{
+                    rows={devices?.map((device, index)=>{
                         return {
-                            ...room,
+                            ...device,
                             id: index + 1
                         }
                     })}
@@ -423,4 +462,4 @@ const RoomsPage = () => {
     )
 };
 
-export default RoomsPage;
+export default MainPage;

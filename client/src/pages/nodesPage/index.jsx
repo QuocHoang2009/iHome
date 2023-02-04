@@ -1,13 +1,16 @@
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Alert, AlertTitle, Box, LinearProgress, useTheme } from '@mui/material';
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { setNodes } from "../../app/state";
 import { tokens } from "../../app/theme";
 import HeaderChild from '../../components/HeaderChild';
-import { addNode, getAllNodes } from '../../const/API';
+import ModalDelete from '../../components/ModalDelete';
+import { addNode, getAllNodes, nodeApi } from '../../const/API';
 
 const NodesPage = () => {
     const theme = useTheme();
@@ -18,8 +21,13 @@ const NodesPage = () => {
     const [isLineNear, setIsLineNear] = useState(false);
     const [isAlert, setIsAlert] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [isReset, setIsReset] = useState(false);
+    const [nodeSelect, setNodeSelect] = useState();
+    const [openModal, setOpenModal] = useState(false);
     const currentHome = useSelector((state)=> state.currentHome);
     const apiAddNode = addNode + currentHome._id;
+    const navigate = useNavigate();
+    const home = useSelector((state)=> state.currentHome);
 
     const buttonHandle = ()=>{
         setIsLineNear(true);
@@ -51,7 +59,7 @@ const NodesPage = () => {
             const res = await axios.get(getAllNodes);
             if (res.data) dispatch(setNodes({nodes: res.data}));;
         })();
-    }, [isReload, dispatch]);
+    }, [isReload, dispatch, isReset]);
 
     const columns = [
         { 
@@ -62,7 +70,19 @@ const NodesPage = () => {
             field: "name",
             headerName: "Name",
             flex: 1,
-            cellClassName: "name-column--cell",
+            renderCell: ({ row: { name } }) => {
+                return (
+                    <Box 
+                        sx={{
+                            ":hover":{
+                                cursor: "pointer",
+                            }
+                        }}
+                    >
+                        {name}
+                    </Box>
+                );
+            },
         },
         {
             field: "room",
@@ -79,7 +99,57 @@ const NodesPage = () => {
             headerName: "Number Channel",
             flex: 1,
         },
+        {
+            field: "delete",
+            headerName: "Delete",
+            flex: 1,
+            renderCell: () => {
+                return (
+                    <Box 
+                        sx={{
+                            "&:hover":{
+                                cursor: 'pointer'
+                            }
+                        }}
+                    >
+                        <DeleteIcon/>
+                    </Box>
+                );
+            },
+        },
     ];
+
+    const handleDeleteNode = async ()=>{
+        const api = nodeApi + home._id +  "/" + nodeSelect._id;
+
+        await axios.delete(api)
+        .then((res) => {
+            setIsReset(!isReset);
+        })
+        .catch((error) => {
+            if(error?.response){
+                console.log(error.response.data);
+            }
+            else{
+                console.log(error);
+            }
+        });
+        setOpenModal(false);
+    }
+
+    const handleDelete = (node)=>{
+        setNodeSelect(node);
+        setOpenModal(true);
+    }
+
+    const handleClick = (params)=>{
+        if(params.field === "delete"){
+            handleDelete(params.row);
+        }
+        else if(params.field === "name"){
+            navigate("/nodes/" + params.row._id);
+        }
+    }
     
     return (
         <Box m="20px">
@@ -89,6 +159,14 @@ const NodesPage = () => {
                 addButton="Add Node" 
                 buttonHandle={buttonHandle} 
             />
+
+            {(openModal && (
+            <ModalDelete 
+                open={openModal} 
+                handleModal={setOpenModal} 
+                name={nodeSelect.name}
+                handleDelete={handleDeleteNode}
+            />))}
 
             {(isLineNear && (
                 <Box >
@@ -155,7 +233,7 @@ const NodesPage = () => {
                     columns={columns} 
                     pageSize={100}
                     rowsPerPageOptions={[100]}
-                    disableSelectionOnClick
+                    onCellClick={handleClick}
                 />}
             </Box>
         </Box>
