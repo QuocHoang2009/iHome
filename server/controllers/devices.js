@@ -34,14 +34,13 @@ export const getAllDevices = async (req, res) => {
 export const deleteDevice = async (req, res) => {
   try {
     const { id } = req.params;
-    const device = await Devices.find({ _id: id });
-    if (device?.relay) {
-      await Channels.findOneAndUpdate(
-        { address: relay.address, channel: relay.channel },
-        { linkWithDevice: "" },
-        { new: true }
-      );
-    }
+    const device = await Devices.findById({ _id: id });
+
+    await Channels.findOneAndUpdate(
+      { address: device?.relay.address, channel: device?.relay.channel },
+      { linkWithDevice: "" },
+      { new: true }
+    );
 
     await Devices.findByIdAndDelete({ _id: id });
 
@@ -63,7 +62,7 @@ export const linkDevices = async (req, res) => {
 
     await Channels.findOneAndUpdate(
       { address: relay.address, channel: relay.channel },
-      { linkWithDevice: device },
+      { link: device, typeLink: "Devices" },
       { new: true }
     );
 
@@ -81,7 +80,9 @@ export const updateDevice = async (req, res) => {
       action: "control",
       dev_addr: relay.address,
       channel: relay.channel,
-      status: state ? "ON" : "OFF",
+      status1: relay.channel === 1 ? (state ? "ON" : "OFF") : "NONE",
+      status2: relay.channel === 2 ? (state ? "ON" : "OFF") : "NONE",
+      status3: relay.channel === 3 ? (state ? "ON" : "OFF") : "NONE",
     };
 
     mqttSendMess(mqttPath, controlRelay);
@@ -92,7 +93,7 @@ export const updateDevice = async (req, res) => {
       { new: true }
     );
 
-    res.status(201).json("Link success!!");
+    res.status(201).json("Change status success!!");
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

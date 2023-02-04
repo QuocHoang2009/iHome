@@ -3,7 +3,10 @@ import { permitJoin } from "../const/index.js";
 import dotenv from "dotenv";
 import mqtt from "mqtt";
 import Channels from "../models/Channels.js";
+import Devices from "../models/Devices.js";
+import Homes from "../models/Homes.js";
 import Nodes from "../models/Nodes.js";
+import Rooms from "../models/Rooms.js";
 dotenv.config();
 
 let node;
@@ -68,6 +71,8 @@ export const addNodes = async (req, res) => {
             address: node?.dev_addr,
             channel: i + 1,
             isActive: true,
+            link: "",
+            typeLink: "",
           });
           const channel = await newChannel.save();
           channels[i] = channel._id;
@@ -78,7 +83,7 @@ export const addNodes = async (req, res) => {
           home: id,
           room: "",
           address: node?.dev_addr,
-          type: node?.dev_type,
+          type: node?.type,
           numChannel: node?.numChannel,
           channels: channels,
           isActive: true,
@@ -118,6 +123,79 @@ export const getAllNodes = async (req, res) => {
 
     allNodes = await Promise.all(promises);
     res.status(200).json(allNodes);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const deleteNode = async (req, res) => {
+  try {
+    const { id, homeId } = req.params;
+    const home = await Homes.findById(homeId);
+    const node = await Nodes.findById({ _id: id });
+
+    const leaveRequest = {
+      action: "command",
+      command: "leave_req",
+      dev_addr: node.address,
+    };
+
+    mqttSendMess(home.mqttPath, leaveRequest);
+
+    const promises = await node?.channels.map(async (channel) => {
+      const channelFind = new Promise((resolve, reject) => {
+        resolve(Channels.findById(channel));
+      });
+
+      return channelFind;
+    });
+
+    const channels = await Promise.all(promises);
+
+    const promisesChannel = channels.map((channel) => {
+      if (channel?.typeLink === "Devices") {
+        new Promise((resolve, reject) => {
+          resolve(
+            Devices.findOneAndUpdate(
+              { _id: channel?.link },
+              { relay: null },
+              { new: true }
+            )
+          );
+        });
+      } else if (channel?.typeLink === "Rooms") {
+        new Promise((resolve, reject) => {
+          resolve(
+            Rooms.findOneAndUpdate(
+              { _id: channel?.link },
+              { relay: null },
+              { new: true }
+            )
+          );
+        });
+      } else if (channel?.typeLink === "Homes") {
+        new Promise((resolve, reject) => {
+          resolve(
+            Homes.findOneAndUpdate(
+              { _id: channel?.link },
+              { relay: null },
+              { new: true }
+            )
+          );
+        });
+      }
+
+      new Promise((resolve, reject) => {
+        resolve(Channels.findByIdAndDelete(channel?._id));
+      });
+
+      return;
+    });
+
+    await Promise.all(promisesChannel);
+    await Nodes.findByIdAndDelete({ _id: id });
+
+    res.status(200).json({ message: "Delete Success!" });
   } catch (err) {
     res.status(404).json({ message: err.message });
   }

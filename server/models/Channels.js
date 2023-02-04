@@ -14,7 +14,10 @@ const ChannelsSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
     },
-    linkWithDevice: {
+    link: {
+      type: String,
+    },
+    typeLink: {
       type: String,
     },
     linkWithNode: {
