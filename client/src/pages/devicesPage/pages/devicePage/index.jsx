@@ -1,17 +1,31 @@
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, FormControlLabel, Switch, Typography, useTheme } from "@mui/material";
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
+import { Formik } from "formik";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import * as yup from "yup";
 import { tokens } from "../../../../app/theme";
 import BoxEdit from "../../../../components/BoxEdit";
 import ButtonsDialog from '../../../../components/ButtonsDialog';
 import HeaderChild from "../../../../components/HeaderChild";
 import ModalDelete from '../../../../components/ModalDelete';
 import RelaysDialog from '../../../../components/RelaysDialog';
-import { deviceApi, disconnectButtonApi, disconnectRelay, linkButtonApi, linkDevice, updateDevice } from "../../../../const/API";
+import { deviceApi, disconnectButtonApi, disconnectRelay, editDevice, linkButtonApi, linkDevice, updateDevice } from "../../../../const/API";
+
+const initialValues = {
+    name: "",
+    room: "",
+};
+
+const checkoutSchema = yup.object().shape({
+    name: yup.string().required("required"),
+    room: yup.string().required("required"),
+});
 
 const DevicePage = ()=>{
     const params = useParams();
@@ -19,6 +33,7 @@ const DevicePage = ()=>{
     const navigate = useNavigate();
     const colors = tokens(theme.palette.mode);
     const home = useSelector((state)=> state.currentHome);
+    const rooms = useSelector((state)=> state.rooms);
     const [currentDevice, setCurrentDevice] = useState();
     const [isReset, setIsReset] = useState();
     const [openModal, setOpenModal] = useState(false);
@@ -27,6 +42,7 @@ const DevicePage = ()=>{
     const [selectedButton, setSelectedButton] = useState();
     const [openModalButton, setOpenModalButton] = useState(false);
     const [openButtonDisconnectModal, setOpenButtonDisconnectModal] = useState(false);
+    const [isEdit, setIsEdit] = useState();
 
     const columns = [
         { field: "id", headerName: "ID" },
@@ -222,10 +238,7 @@ const DevicePage = ()=>{
             setSelectedValueLink(value);
             const data = {
                 device: currentDevice._id,
-                relay: {
-                    address: value.address,
-                    channel: value.channel
-                }
+                relay: value.channels[value.channel - 1]._id
             }
 
             await axios.post(linkDevice, {
@@ -261,7 +274,8 @@ const DevicePage = ()=>{
                 button: {
                     _id: value._id,
                     channel: value.channel
-                }
+                },
+                mqttPath: home.mqttPath
             }
 
             await axios.patch(linkButtonApi, {
@@ -286,12 +300,15 @@ const DevicePage = ()=>{
             const api = deviceApi + params.id;
             const res = await axios.get(api);
             const device = res.data;
+            console.log(device)
             setCurrentDevice(device);
         })()
     }, [params.id, isReset]);
 
     const relayRow = [{id : 1, state: currentDevice?.state, ...currentDevice?.relay}];
     const buttons = currentDevice?.relay?.buttons;
+    initialValues.name = currentDevice?.name;
+    initialValues.room = currentDevice?.room._id;
 
     const handleClick = (params)=>{
         if(params.field === "delete"){
@@ -317,7 +334,8 @@ const DevicePage = ()=>{
             button:{
                 _id: button._id,
                 channel: button.numChannel
-            }
+            },
+            mqttPath: home.mqttPath
         }    
 
         await axios.patch(disconnectButtonApi, {
@@ -342,12 +360,41 @@ const DevicePage = ()=>{
             setOpenButtonDisconnectModal(true);
         }
     }
+
+    const handleFormSubmit  = async (values, onSubmitProps) => {
+        const api = editDevice + currentDevice._id;
+
+        await axios.patch(api, {
+            body: values,
+        })
+        .then((res) => {
+            const device = res.data;
+            if(!device) return;
+            onSubmitProps.resetForm();
+            setIsEdit(false);
+            setIsReset(!isReset);
+        })
+        .catch((error) => {
+            if(error?.response){
+                console.log(error.response.data);
+            }
+            else{
+                console.log(error);
+            }
+        });
+    };
+
+    const editHandle = ()=>{
+        setIsEdit(true);
+    }
     
     return(
         <Box m="20px">
             <HeaderChild 
                 title={currentDevice?.name}
-                subtitle={currentDevice?.room.name}  
+                subtitle={currentDevice?.room.name}
+                addButton="Edit"
+                buttonHandle={editHandle}
             />
 
             {(openModal && (
@@ -366,11 +413,85 @@ const DevicePage = ()=>{
                 handleDelete={handleDisconnectButton}
             />))}
 
+            {(isEdit && (
+                <Formik
+                    onSubmit={handleFormSubmit}
+                    initialValues={initialValues}
+                    validationSchema={checkoutSchema}
+                >
+                {({
+                    values,
+                    errors,
+                    touched,
+                    handleBlur,
+                    handleChange,
+                    handleSubmit,
+                }) => (
+                    <form onSubmit={handleSubmit}>
+                        <Box display="flex" justifyContent="space-between" m="20px 0" >
+                            <Box display="grid" height="45px" width="39%">
+                                <TextField
+                                    label="Name"
+                                    onBlur={handleBlur}
+                                    onChange={handleChange}
+                                    value={values.name}
+                                    name="name"
+                                    error={
+                                        Boolean(touched.name) && Boolean(errors.name)
+                                    }
+                                    helperText={touched.name && errors.name}
+                                    sx={{ gridColumn: "span 4" }}
+                                />
+                            </Box>
+
+                            <Box  display="grid" height="45px" width="39%">
+                                <FormControl fullWidth>
+                                    <InputLabel>Room</InputLabel>
+                                    <Select                            
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={values.room}
+                                        label="room"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        name="room"
+                                        error={
+                                            Boolean(touched.room) && Boolean(errors.room)
+                                        }
+                                        sx={{ gridColumn: "span 4" }}
+                                    >
+                                        {rooms.map((room, key)=>{
+                                            return (<MenuItem value={room._id} key={key}>{room.name}</MenuItem>)
+                                        })}
+                                    </Select>
+                                </FormControl>
+                            </Box>
+
+                            <Box height="45px" width="20%">
+                                <Button
+                                    fullWidth
+                                    type="submit"
+                                    sx={{
+                                        p: "1rem",
+                                        backgroundColor: colors.greenAccent[600],
+                                        color: "#fff",
+                                        "&:hover": { color: colors.greenAccent[400] },
+                                    }}
+                                >
+                                    Edit device
+                                </Button>
+                            </Box>
+                        </Box>
+                    </form>
+                )}
+                </Formik>
+            ))}
+
             <BoxEdit title="Relay">
                 {currentDevice?.relay ? (
                     <Box
                     m="10px 0 0 0"
-                    height="23vh"
+                    height="22.5vh"
                     sx={{
                     "& .MuiDataGrid-root": {
                         border: "none",

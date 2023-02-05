@@ -99,7 +99,6 @@ const MainPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [deviceSelect, setDeviceSelect] = useState();
     const [devices, setDevices] = useState([]);
-
     const [openModalLink, setOpenModalLink] = useState(false);
     const [selectedValueLink, setSelectedValueLink] = useState();
 
@@ -113,10 +112,7 @@ const MainPage = () => {
             setSelectedValueLink(value);
             const data = {
                 device: deviceSelect._id,
-                relay: {
-                    address: value.address,
-                    channel: value.channel
-                }
+                relay: value.channels[value.channel - 1]._id
             }
 
             await axios.post(linkDevice, {
@@ -141,10 +137,18 @@ const MainPage = () => {
             if(home?._id){
                 const apiGetDevices = getAllDevices + home?._id;
                 const res = await axios.get(apiGetDevices);
-                setDevices(res.data.map((device)=>{                
+                const {devices, relays} = res.data;
+                            
+                setDevices(devices.map((device)=>{   
+                    const relayFilter = (relay)=>{
+                        return relay?._id === device.relay;
+                    }             
                     const room = rooms.find(room=> room?._id === device.room);
                     delete device.room;
                     device.room = room;
+                    if(device?.relay){
+                        device.relay = relays.find(relayFilter);
+                    }
                     return device;
                 }));
             }
@@ -190,13 +194,13 @@ const MainPage = () => {
             field: "state",
             headerName: "State",
             flex: 1,
-            renderCell: ({ row: { relay, state } }) => {
+            renderCell: ({ row: { relay } }) => {
                 return (
                     <Box>
                         {!relay ? (
                             <ButtonStyle name="LINK" width="75px" height="35px"/>
                         ) : (
-                            <FormControlLabel value={state} control={<Switch checked={state} />} />
+                            <FormControlLabel value={relay.state} control={<Switch checked={relay.state} />} />
                         )}
                     </Box>
                 );
@@ -277,8 +281,6 @@ const MainPage = () => {
         const data = {
             mqttPath: home.mqttPath,
             relay: device.relay,
-            id: device._id,
-            state: !device.state
         }
 
         await axios.patch(updateDevice, {
