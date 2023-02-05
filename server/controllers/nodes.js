@@ -51,7 +51,7 @@ export const mqttSendMess = (topic, data) => {
 export const addNodes = async (req, res) => {
   try {
     const { id } = req.params;
-    const { topic } = req.body;
+    const { topic, room } = req.body;
     mqttSendMess(topic, permitJoin);
 
     const timer = setTimeout(() => {
@@ -64,33 +64,59 @@ export const addNodes = async (req, res) => {
         clearTimeout(timer);
         await Nodes.deleteMany({ address: node?.dev_addr });
         await Channels.deleteMany({ address: node?.dev_addr });
-        const channels = [];
 
-        for (let i = 0; i < node?.numChannel; i++) {
-          const newChannel = new Channels({
+        if (node.type === "Relay") {
+          const channels = [];
+
+          for (let i = 0; i < node?.numChannel; i++) {
+            const newChannel = new Channels({
+              address: node?.dev_addr,
+              channel: i + 1,
+              isActive: true,
+              link: "",
+              typeLink: "",
+              linkWithNode: [],
+            });
+            const channel = await newChannel.save();
+            channels[i] = channel._id;
+          }
+
+          const newNode = new Nodes({
+            name: "New Relay",
+            home: id,
+            room: room ? room : "",
             address: node?.dev_addr,
-            channel: i + 1,
+            type: node?.type,
+            numChannel: node?.numChannel,
+            channels: channels,
             isActive: true,
-            link: "",
-            typeLink: "",
           });
-          const channel = await newChannel.save();
-          channels[i] = channel._id;
+
+          node = await newNode.save();
+        } else if (node.type === "Button") {
+          const newNode = new Nodes({
+            name: "New Button",
+            home: id,
+            room: room ? room : "",
+            address: node?.dev_addr,
+            type: node?.type,
+            numChannel: node?.numChannel,
+            channels: [[], [], []],
+            isActive: true,
+          });
+          node = await newNode.save();
+        } else if (node.type === "Sensor") {
+          const newNode = new Nodes({
+            name: "New Sensor",
+            home: id,
+            room: room ? room : "",
+            address: node?.dev_addr,
+            type: node?.type,
+            isActive: true,
+          });
+          node = await newNode.save();
         }
 
-        const newNode = new Nodes({
-          name: "newNode",
-          home: id,
-          room: "",
-          address: node?.dev_addr,
-          type: node?.type,
-          numChannel: node?.numChannel,
-          channels: channels,
-          isActive: true,
-          isLink: false,
-        });
-
-        node = await newNode.save();
         res.status(200).json(node);
         node = undefined;
       }
