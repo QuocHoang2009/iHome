@@ -332,7 +332,7 @@ const MainPage = () => {
                 <ModalDelete 
                     open={openModal} 
                     handleModal={setOpenModal} 
-                    name={deviceSelect.name}
+                    name={"Delete "+ deviceSelect.name}
                     handleDelete={handleDeleteDevice}
                 />))}
 

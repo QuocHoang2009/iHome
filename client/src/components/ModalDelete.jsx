@@ -1,4 +1,4 @@
-import { Box, Button, Modal, Typography, useTheme } from "@mui/material";
+import { Box, Button, Modal, Stack, Typography, useTheme } from "@mui/material";
 import { tokens } from "../app/theme";
 
 const ModalDelete = (props)=>{
@@ -20,18 +20,20 @@ const ModalDelete = (props)=>{
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    minWidth: 100,
                     bgcolor: 'background.paper',
                     border: '2px solid #000',
                     boxShadow: 24,
                     p: 4,
+                    minWidth: "250px",
                 }}
             >
-                <Typography variant="h5" color={colors.greenAccent[400]}>
-                    Delete {props.name} ?
+                <Typography variant="h4" color={colors.greenAccent[400]}>
+                     {props.name} ?
                 </Typography>
-                <Button onClick={handleClose} variant="contained">Cancel</Button>
-                <Button onClick={props.handleDelete} variant="contained">Delete</Button>
+                <Stack direction="row" justifyContent="space-between" paddingTop="10px">
+                    <Button onClick={handleClose} variant="contained">Cancel</Button>
+                    <Button onClick={props.handleDelete} variant="contained">Continue</Button>
+                </Stack>
             </Box>
         </Modal>
     )

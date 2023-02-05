@@ -22,12 +22,15 @@ export const roomApi = host + "/rooms/";
 export const linkRoom = host + "/rooms/linkroom";
 export const updateRoom = host + "/rooms";
 
-//rooms
+//devices
 export const getAllDevices = host + "/devices/all/";
 export const addDevice = host + "/devices/adddevice";
 export const linkDevice = host + "/devices/linkdevice";
 export const deviceApi = host + "/devices/";
 export const updateDevice = host + "/devices";
+export const disconnectRelay = host + "/devices/disconnect";
+export const linkButtonApi = host + "/devices/linkbutton";
+export const disconnectButtonApi = host + "/devices/disconnectbutton";
 
 //img http://localhost:3001/assets/
 export const getImg = `http://localhost:3001/assets/`;
