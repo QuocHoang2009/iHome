@@ -4,6 +4,7 @@ import {
   deleteDevice,
   disconnectButton,
   disconnectRelay,
+  editDevice,
   getAllDevices,
   getDevice,
   linkButton,
@@ -23,5 +24,6 @@ router.patch("/", updateDevice);
 router.patch("/disconnect", disconnectRelay);
 router.patch("/linkbutton", linkButton);
 router.patch("/disconnectbutton", disconnectButton);
+router.patch("/edit/:id", editDevice);
 
 export default router;

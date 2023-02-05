@@ -76,6 +76,7 @@ export const addNodes = async (req, res) => {
               link: "",
               typeLink: "",
               linkWithNode: [],
+              state: false,
             });
             const channel = await newChannel.save();
             channels[i] = channel._id;
@@ -154,6 +155,22 @@ export const getAllNodes = async (req, res) => {
   }
 };
 
+export const getNode = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const node = await Nodes.findById(id);
+    if (node?.room) {
+      const room = await Rooms.findById(node?.room);
+      node.room = room;
+    }
+
+    res.status(200).json(node);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
 export const deleteNode = async (req, res) => {
   try {
     const { id, homeId } = req.params;
@@ -224,5 +241,22 @@ export const deleteNode = async (req, res) => {
     res.status(200).json({ message: "Delete Success!" });
   } catch (err) {
     res.status(404).json({ message: err.message });
+  }
+};
+
+export const editNode = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, room } = req.body.body;
+
+    await Nodes.findOneAndUpdate(
+      { _id: id },
+      { name: name, room: room },
+      { new: true }
+    );
+
+    res.status(201).json("Change status success!!");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

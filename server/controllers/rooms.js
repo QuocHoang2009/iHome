@@ -11,7 +11,6 @@ export const addRooms = async (req, res) => {
       home: home,
       sensor: null,
       relay: null,
-      state: false,
     });
 
     const savedRoom = await newRoom.save();

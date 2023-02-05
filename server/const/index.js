@@ -14,3 +14,9 @@ export const controlRelay = {
   dev_addr: "",
   status: "ON",
 };
+
+export const linkBtnRelay = {
+  action: "link_dev",
+  btn_addr: "",
+  relay_addr: "",
+};

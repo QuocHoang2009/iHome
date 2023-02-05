@@ -19,9 +19,6 @@ const RoomsSchema = new mongoose.Schema(
     relay: {
       type: Object,
     },
-    state: {
-      type: Boolean,
-    },
   },
   { timestamps: true }
 );

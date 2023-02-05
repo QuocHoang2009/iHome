@@ -1,5 +1,11 @@
 import express from "express";
-import { addNodes, deleteNode, getAllNodes } from "../controllers/nodes.js";
+import {
+  addNodes,
+  deleteNode,
+  getAllNodes,
+  getNode,
+  editNode,
+} from "../controllers/nodes.js";
 
 const router = express.Router();
 
@@ -7,5 +13,7 @@ const router = express.Router();
 router.post("/addnode/:id", addNodes);
 router.get("/all", getAllNodes);
 router.delete("/:homeId/:id", deleteNode);
+router.get("/:id", getNode);
+router.patch("/edit/:id", editNode);
 
 export default router;

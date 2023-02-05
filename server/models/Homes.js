@@ -30,10 +30,6 @@ const HomesSchema = new mongoose.Schema(
       type: Object,
       default: null,
     },
-    state: {
-      type: Boolean,
-      default: null,
-    },
   },
   { timestamps: true }
 );

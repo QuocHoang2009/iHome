@@ -13,7 +13,6 @@ export const addDevices = async (req, res) => {
       home: home,
       room: room,
       relay: {},
-      state: false,
     });
 
     await newDevice.save();
@@ -27,7 +26,17 @@ export const getAllDevices = async (req, res) => {
   try {
     const { id } = req.params;
     const devices = await Devices.find({ home: id });
-    res.status(200).json(devices);
+
+    const promises = await devices.map(async (device) => {
+      const relay = new Promise(async (resolve, reject) => {
+        resolve(await Channels.findById(device?.relay));
+      });
+      return relay;
+    });
+
+    const relays = await Promise.all(promises);
+
+    res.status(200).json({ devices: devices, relays: relays });
   } catch (err) {
     res.status(404).json({ message: err.message });
   }
@@ -40,11 +49,9 @@ export const getDevice = async (req, res) => {
     const room = await Rooms.findById(device?.room);
     device.room = room;
 
-    if (device.relay) {
-      let relay = await Nodes.findOne({ address: device?.relay.address });
-      const channel = await Channels.findById(
-        relay?.channels[device?.relay.channel - 1]
-      );
+    if (device?.relay) {
+      const channel = await Channels.findOne({ _id: device.relay });
+      const relay = await Nodes.findOne({ address: channel.address });
 
       const promises = await channel.linkWithNode.map(async (node) => {
         const button = new Promise(async (resolve, reject) => {
@@ -106,7 +113,7 @@ export const linkDevices = async (req, res) => {
     );
 
     await Channels.findOneAndUpdate(
-      { address: relay.address, channel: relay.channel },
+      { _id: relay },
       { link: device, typeLink: "Devices" },
       { new: true }
     );
@@ -119,21 +126,21 @@ export const linkDevices = async (req, res) => {
 
 export const updateDevice = async (req, res) => {
   try {
-    const { id, state, mqttPath, relay } = req.body.body;
+    const { mqttPath, relay } = req.body.body;
 
     const controlRelay = {
       action: "control",
       dev_addr: relay.address,
-      status1: relay.channel === 1 ? (state ? "ON" : "OFF") : "NONE",
-      status2: relay.channel === 2 ? (state ? "ON" : "OFF") : "NONE",
-      status3: relay.channel === 3 ? (state ? "ON" : "OFF") : "NONE",
+      status1: relay.channel === 1 ? (!relay.state ? "ON" : "OFF") : "NONE",
+      status2: relay.channel === 2 ? (!relay.state ? "ON" : "OFF") : "NONE",
+      status3: relay.channel === 3 ? (!relay.state ? "ON" : "OFF") : "NONE",
     };
 
     mqttSendMess(mqttPath, controlRelay);
 
-    await Devices.findOneAndUpdate(
-      { _id: id },
-      { state: state },
+    await Channels.findOneAndUpdate(
+      { _id: relay._id },
+      { state: !relay.state },
       { new: true }
     );
 
@@ -167,10 +174,19 @@ export const disconnectRelay = async (req, res) => {
 
 export const linkButton = async (req, res) => {
   try {
-    //{_id, channel}
-    const { relay, button } = req.body.body;
-
+    const { relay, button, mqttPath } = req.body.body;
     const channel = await Channels.findById(relay._id);
+    const node = await Nodes.findById(button._id);
+
+    const linkButtonRelay = {
+      action: "link_dev",
+      btn_addr: node.address,
+      btn_channel: button.channel,
+      relay_addr: channel.address,
+      relay_channel: channel.channel,
+    };
+
+    mqttSendMess(mqttPath, linkButtonRelay);
 
     let linkWithNode = [];
     if (channel?.linkWithNode) {
@@ -184,7 +200,6 @@ export const linkButton = async (req, res) => {
       { new: true }
     );
 
-    const node = await Nodes.findById(button._id);
     const channels = node?.channels;
     channels[button.channel - 1].push(relay);
     await Nodes.findOneAndUpdate(
@@ -201,10 +216,20 @@ export const linkButton = async (req, res) => {
 
 export const disconnectButton = async (req, res) => {
   try {
-    const { relay, button } = req.body.body;
-    console.log(relay);
+    const { relay, button, mqttPath } = req.body.body;
 
     const channel = await Channels.findById(relay._id);
+    const node = await Nodes.findById(button._id);
+
+    const disconnectButtonRelay = {
+      action: "disconnect_dev",
+      btn_addr: node.address,
+      btn_channel: button.channel,
+      relay_addr: channel.address,
+      relay_channel: channel.channel,
+    };
+
+    mqttSendMess(mqttPath, disconnectButtonRelay);
 
     const buttonFilter = (buttonNode) => {
       return (
@@ -224,7 +249,6 @@ export const disconnectButton = async (req, res) => {
       return relayNode._id !== relay._id || relayNode.channel !== relay.channel;
     };
 
-    const node = await Nodes.findById(button._id);
     const channels = node?.channels;
 
     channels[button.channel - 1] =
@@ -237,6 +261,23 @@ export const disconnectButton = async (req, res) => {
     );
 
     res.status(201).json("connect success!!");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const editDevice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, room } = req.body.body;
+
+    const device = await Devices.findOneAndUpdate(
+      { _id: id },
+      { name: name, room: room },
+      { new: true }
+    );
+
+    res.status(201).json("Change status success!!");
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

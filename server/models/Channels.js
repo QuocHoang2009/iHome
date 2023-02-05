@@ -23,6 +23,9 @@ const ChannelsSchema = new mongoose.Schema(
     linkWithNode: {
       type: Array,
     },
+    state: {
+      type: Boolean,
+    },
   },
   { timestamps: true }
 );
