@@ -145,9 +145,12 @@ const DevicePage = ()=>{
             headerName: "Room",
             flex: 1,
             renderCell: ({ row: { room } }) => {
+                const roomRes = rooms.find((roomSelect)=>{
+                                return room?._id === roomSelect?.room;
+                            })
                 return (
                     <Box>
-                        {room}
+                        {roomRes.name}
                     </Box>
                 );
             },
@@ -200,16 +203,9 @@ const DevicePage = ()=>{
     }
 
     const handleChangeState = async ()=>{
-        const relay = {
-            address : currentDevice.relay.address,
-            channel : currentDevice.relay.channel
-        }
-
         const data = {
             mqttPath: home.mqttPath,
-            relay: relay,
-            id: currentDevice._id,
-            state: !currentDevice.state
+            relay: currentDevice.relay,
         }
 
         await axios.patch(updateDevice, {
@@ -300,15 +296,15 @@ const DevicePage = ()=>{
             const api = deviceApi + params.id;
             const res = await axios.get(api);
             const device = res.data;
-            console.log(device)
             setCurrentDevice(device);
         })()
     }, [params.id, isReset]);
 
     const relayRow = [{id : 1, state: currentDevice?.state, ...currentDevice?.relay}];
-    const buttons = currentDevice?.relay?.buttons;
+    let buttons = currentDevice?.relay?.buttons;
     initialValues.name = currentDevice?.name;
     initialValues.room = currentDevice?.room._id;
+    
 
     const handleClick = (params)=>{
         if(params.field === "delete"){

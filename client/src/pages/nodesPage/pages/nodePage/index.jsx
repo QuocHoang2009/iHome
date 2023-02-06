@@ -6,7 +6,6 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import * as yup from "yup";
 import { tokens } from "../../../../app/theme";
-import BoxEdit from "../../../../components/BoxEdit";
 import HeaderChild from "../../../../components/HeaderChild";
 import { editNode, nodeApi } from "../../../../const/API";
 import ButtonPage from "./ButtonPage";
@@ -36,8 +35,8 @@ const NodePage = ()=>{
         (async ()=>{
             const api = nodeApi + params.id;
             const res = await axios.get(api);
-            setCurrentNode(res.data);
-            
+            const {node} = res.data;
+            setCurrentNode(node);
         })()
     }, [params.id, isReset]);
 
@@ -161,9 +160,7 @@ const NodePage = ()=>{
             ))}
 
             {PageChild&&(
-                <BoxEdit>
-                    <PageChild/>
-                </BoxEdit>
+                <PageChild/>
             )}
             
         </Box>

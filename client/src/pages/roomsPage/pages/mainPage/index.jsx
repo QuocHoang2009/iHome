@@ -1,43 +1,42 @@
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, useTheme } from "@mui/material";
+import { Box, Button, TextField, useTheme } from "@mui/material";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import { Formik } from "formik";
 import { useEffect, useState } from 'react';
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import * as yup from "yup";
+import { setRooms } from "../../../../app/state";
 import { tokens } from "../../../../app/theme";
 import ButtonStyle from '../../../../components/ButtonStyle';
 import HeaderChild from '../../../../components/HeaderChild';
 import ModalDelete from '../../../../components/ModalDelete';
 import RelaysDialog from '../../../../components/RelaysDialog';
-import { addDevice, deviceApi, getAllDevices, linkDevice, updateDevice } from "../../../../const/API";
+import { addRoom, getAllRooms, linkRoom, roomApi, updateRoom } from "../../../../const/API";
 
 const initialValues = {
     name: "",
     home: "",
-    room: "",
 };
 
 const checkoutSchema = yup.object().shape({
     name: yup.string().required("required"),
-    room: yup.string().required("required"),
 });
 
 const MainPage = () => {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const home = useSelector((state)=> state.currentHome);
-    const rooms = useSelector((state)=> state.rooms);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [isAdd, setIsAdd] = useState(false);
-    const [isReset, setIsReset] = useState(false);
     const [openModal, setOpenModal] = useState(false);
-    const [deviceSelect, setDeviceSelect] = useState();
-    const [devices, setDevices] = useState([]);
+    const [roomSelect, setRoomSelect] = useState();
+    const [isReset, setIsReset] = useState(false);
+
     const [openModalLink, setOpenModalLink] = useState(false);
     const [selectedValueLink, setSelectedValueLink] = useState();
 
@@ -50,11 +49,14 @@ const MainPage = () => {
         if(value){
             setSelectedValueLink(value);
             const data = {
-                device: deviceSelect._id,
-                relay: value.channels[value.channel - 1]._id
+                room: roomSelect._id,
+                relay: {
+                    address: value.address,
+                    channel: value.channel
+                }
             }
-
-            await axios.post(linkDevice, {
+            
+            await axios.post(linkRoom, {
                 body: data,
             })
             .then((res) => {
@@ -71,61 +73,39 @@ const MainPage = () => {
         }
     };
     
+    
     useEffect(()=>{
         (async () => {
             if(home?._id){
-                const apiGetDevices = getAllDevices + home?._id;
-                const res = await axios.get(apiGetDevices);
-                const {devices, relays} = res.data;
-                            
-                setDevices(devices.map((device)=>{   
-                    const relayFilter = (relay)=>{
-                        return relay?._id === device.relay;
-                    }             
-                    const room = rooms.find(room=> room?._id === device.room);
-                    delete device.room;
-                    device.room = room;
-                    if(device?.relay){
-                        device.relay = relays.find(relayFilter);
-                    }
-                    return device;
-                }));
+                const apiGetRooms = getAllRooms + home?._id;
+                const res = await axios.get(apiGetRooms);
+                dispatch(setRooms({rooms: res.data}));
             }
             else{
                 navigate('/login');
             }
         })();
-    }, [ home, isAdd, navigate, isReset, rooms]);
+    }, [dispatch, home, isAdd, navigate, isReset]);
+
+    const rooms = useSelector((state)=> state.rooms);
 
     const columns = [
         { field: "id", headerName: "ID" },
         {
             field: "name",
             headerName: "Name",
-            flex: 2,
+            flex: 3,
             renderCell: ({ row: { name } }) => {
                 return (
-                    <Box 
-                        sx={{
-                            ":hover":{
-                                cursor: "pointer",
-                            }
-                        }}
-                    >
-                        {name}
-                    </Box>
-                );
-            },
-        },
-        {
-            field: "room",
-            headerName: "Room",
-            flex: 1,
-            renderCell: ({ row: { room } }) => {
-                return (
-                    <Box>
-                        {room?.name}
-                    </Box>
+                <Box 
+                    sx={{
+                        ":hover":{
+                            cursor: "pointer",
+                        }
+                    }}
+                >
+                    {name}
+                </Box>
                 );
             },
         },
@@ -133,13 +113,13 @@ const MainPage = () => {
             field: "state",
             headerName: "State",
             flex: 1,
-            renderCell: ({ row: { relay } }) => {
+            renderCell: ({ row: { relay, state } }) => {
                 return (
                     <Box>
                         {!relay ? (
                             <ButtonStyle name="LINK" width="75px" height="35px"/>
                         ) : (
-                            <FormControlLabel value={relay.state} control={<Switch checked={relay.state} />} />
+                            <FormControlLabel value={state} control={<Switch checked={state} />} />
                         )}
                     </Box>
                 );
@@ -165,20 +145,20 @@ const MainPage = () => {
         },
     ];
 
+
     const buttonHandle = ()=> setIsAdd(true);
 
-    const addDeviceHandle = async (values, onSubmitProps)=>{
+    const addRoomHandle = async (values, onSubmitProps)=>{
         values.home = home._id;
 
-        await axios.post(addDevice, {
+        await axios.post(addRoom, {
             body: values,
         })
         .then((res) => {
-            const device = res.data;
-            if(!device) return;
+            const room = res.data;
+            if(!room) return;
             onSubmitProps.resetForm();
             setIsAdd(false);
-            setIsReset(!isReset);
         })
         .catch((error) => {
             if(error?.response){
@@ -191,11 +171,11 @@ const MainPage = () => {
     }
     
     const handleFormSubmit  = async (values, onSubmitProps) => {
-        await addDeviceHandle(values, onSubmitProps);
+        await addRoomHandle(values, onSubmitProps);
     };
 
-    const handleDeleteDevice = async ()=>{
-        const api = deviceApi + deviceSelect._id;
+    const handleDeleteRoom = async ()=>{
+        const api = roomApi + roomSelect._id;
         await axios.delete(api)
         .then((res) => {
             setIsReset(!isReset);
@@ -211,18 +191,20 @@ const MainPage = () => {
         setOpenModal(false);
     }
 
-    const handleDelete = (device)=>{
-        setDeviceSelect(device);
+    const handleDelete = (room)=>{
+        setRoomSelect(room);
         setOpenModal(true);
     }
 
-    const handleChangeState = async (device)=>{
+    const handleChangeState = async (room)=>{
         const data = {
             mqttPath: home.mqttPath,
-            relay: device.relay,
+            relay: room.relay,
+            id: room._id,
+            state: !room.state
         }
 
-        await axios.patch(updateDevice, {
+        await axios.patch(updateRoom, {
             body: data,
         })
         .then((res) => {
@@ -238,8 +220,8 @@ const MainPage = () => {
         });
     }
 
-    const handleLink = (device)=>{
-        setDeviceSelect(device);
+    const handleLink = (room)=>{
+        setRoomSelect(room);
         handleClickOpenModalLink();
     }
 
@@ -248,7 +230,7 @@ const MainPage = () => {
             handleDelete(params.row);
         }
         else if(params.field === "name"){
-            navigate("/devices/" + params.row._id);
+            navigate("/rooms/" + params.row._id);
         }
         else if(params.field === "state"){
             if(params.row.relay){
@@ -263,9 +245,9 @@ const MainPage = () => {
     return (
         <Box m="20px">
             <HeaderChild 
-                title="Devices" 
-                subtitle="Managing the Devices"  
-                addButton="Add Device"
+                title="Rooms" 
+                subtitle="Managing the Rooms"  
+                addButton="Add Room"
                 buttonHandle={buttonHandle}
             />
 
@@ -273,8 +255,8 @@ const MainPage = () => {
                 <ModalDelete 
                     open={openModal} 
                     handleModal={setOpenModal} 
-                    name={"Delete "+ deviceSelect.name}
-                    handleDelete={handleDeleteDevice}
+                    name={roomSelect.name}
+                    handleDelete={handleDeleteRoom}
                 />))}
 
             {(isAdd && (
@@ -293,7 +275,7 @@ const MainPage = () => {
                 }) => (
                     <form onSubmit={handleSubmit}>
                         <Box display="flex" justifyContent="space-between" m="20px 0" >
-                            <Box display="grid" height="45px" width="39%">
+                            <Box display="grid" height="45px" width="68%">
                                 <TextField
                                     label="Name"
                                     onBlur={handleBlur}
@@ -308,30 +290,7 @@ const MainPage = () => {
                                 />
                             </Box>
 
-                            <Box  display="grid" height="45px" width="39%">
-                                <FormControl fullWidth>
-                                    <InputLabel>Room</InputLabel>
-                                    <Select                            
-                                        labelId="demo-simple-select-label"
-                                        id="demo-simple-select"
-                                        value={values.room}
-                                        label="room"
-                                        onBlur={handleBlur}
-                                        onChange={handleChange}
-                                        name="room"
-                                        error={
-                                            Boolean(touched.room) && Boolean(errors.room)
-                                        }
-                                        sx={{ gridColumn: "span 4" }}
-                                    >
-                                        {rooms.map((room, key)=>{
-                                            return (<MenuItem value={room._id} key={key}>{room.name}</MenuItem>)
-                                        })}
-                                    </Select>
-                                </FormControl>
-                            </Box>
-
-                            <Box height="45px" width="20%">
+                            <Box height="45px" width="30%">
                                 <Button
                                     fullWidth
                                     type="submit"
@@ -342,7 +301,7 @@ const MainPage = () => {
                                         "&:hover": { color: colors.greenAccent[400] },
                                     }}
                                 >
-                                    Create device
+                                    Create room
                                 </Button>
                             </Box>
                         </Box>
@@ -381,9 +340,9 @@ const MainPage = () => {
                 }}
             >
                 <DataGrid 
-                    rows={devices?.map((device, index)=>{
+                    rows={rooms?.map((room, index)=>{
                         return {
-                            ...device,
+                            ...room,
                             id: index + 1
                         }
                     })}

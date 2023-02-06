@@ -57,7 +57,8 @@ const MainPage = () => {
 
     useEffect(()=>{
         (async () => {
-            const res = await axios.get(getAllNodes);
+            const api = getAllNodes + "/" + home._id;
+            const res = await axios.get(api);
             if (res.data){
                 const nodes = res.data.map((device)=>{                
                     const room = rooms.find(room=> room?._id === device.room);
@@ -68,7 +69,7 @@ const MainPage = () => {
                 dispatch(setNodes({nodes: nodes}));
             }
         })();
-    }, [isReload, dispatch, isReset, rooms]);
+    }, [isReload, dispatch, isReset, rooms, home._id]);
 
     const columns = [
         { 
