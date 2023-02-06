@@ -129,7 +129,8 @@ export const addNodes = async (req, res) => {
 
 export const getAllNodes = async (req, res) => {
   try {
-    let allNodes = await Nodes.find();
+    const { id } = req.params;
+    let allNodes = await Nodes.find({ home: id });
 
     const promises = await allNodes.map(async (node) => {
       if (node?.channels) {
@@ -159,13 +160,51 @@ export const getNode = async (req, res) => {
   try {
     const { id } = req.params;
 
+    let dataRes = {};
+
     const node = await Nodes.findById(id);
     if (node?.room) {
       const room = await Rooms.findById(node?.room);
       node.room = room;
     }
 
-    res.status(200).json(node);
+    dataRes.node = node;
+
+    if (node?.type === "Relay") {
+      const promises = await node.channels.map(async (channelId) => {
+        const channel = new Promise((resolve, reject) => {
+          resolve(Channels.findById(channelId));
+        });
+        return channel;
+      });
+
+      dataRes.channels = await Promise.all(promises);
+    }
+
+    if (dataRes?.channel) {
+      const promises = await dataRes?.channel.map(async (channel) => {
+        if (channel.type === "Device") {
+          const device = new Promise((resolve, reject) => {
+            resolve(Devices.findById(channel.link));
+          });
+          return device;
+        } else if (channel.type === "Room") {
+          const room = new Promise((resolve, reject) => {
+            resolve(Rooms.findById(channel.link));
+          });
+          return room;
+        } else if (channel.type === "Home") {
+          const home = new Promise((resolve, reject) => {
+            resolve(Homes.findById(channel.link));
+          });
+          return home;
+        }
+      });
+
+      dataRes.devices = await Promise.all(promises);
+    }
+
+    res.status(200).json(dataRes);
   } catch (err) {
     res.status(404).json({ message: err.message });
   }

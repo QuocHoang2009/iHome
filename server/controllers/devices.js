@@ -85,11 +85,12 @@ export const deleteDevice = async (req, res) => {
   try {
     const { id } = req.params;
     const device = await Devices.findById({ _id: id });
+    console.log(device);
 
     if (device?.relay) {
       await Channels.findOneAndUpdate(
-        { address: device?.relay?.address, channel: device?.relay?.channel },
-        { linkWithDevice: "" },
+        { _id: device.relay },
+        { typeLink: "", link: "" },
         { new: true }
       );
     }
