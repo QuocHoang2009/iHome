@@ -15,6 +15,8 @@ export const editNode = host + "/nodes/edit/";
 export const getAllHomes = host + "/homes/all/";
 export const getHome = host + "/homes/";
 export const addHome = host + "/homes/addhome/";
+export const linkHome = host + "/homes";
+export const unLinkHome = host + "/homes/unlink";
 
 //rooms
 export const getAllRooms = host + "/rooms/all/";
@@ -33,6 +35,10 @@ export const disconnectRelay = host + "/devices/disconnect";
 export const linkButtonApi = host + "/devices/linkbutton";
 export const disconnectButtonApi = host + "/devices/disconnectbutton";
 export const editDevice = host + "/devices/edit/";
+
+//get information relayADE
+export const inforADE = host + "/ades/";
+export const inforSensor = host + "/sensor/";
 
 //img http://localhost:3001/assets/
 export const getImg = `http://localhost:3001/assets/`;

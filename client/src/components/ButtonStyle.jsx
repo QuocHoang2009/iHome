@@ -14,6 +14,7 @@ const ButtonStyle = (props)=>{
             display="flex"
             justifyContent="center"
             alignItems="center"
+            onClick={props?.handleClick}
             backgroundColor={colors.greenAccent[600]}
             borderRadius="4px"
             sx={{

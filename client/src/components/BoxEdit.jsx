@@ -9,7 +9,8 @@ const BoxEdit = (props)=>{
     return(
         <Box sx={{
             background: `${colors.primary[400]}`,
-            padding: "10px"
+            padding: "10px",
+            width: "100%"
         }}>
             <Stack direction="row" justifyContent="space-between">
                 <Typography
