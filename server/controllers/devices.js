@@ -15,8 +15,8 @@ export const addDevices = async (req, res) => {
       relay: {},
     });
 
-    await newDevice.save();
-    res.status(201).json("Links successfull!!");
+    const device = await newDevice.save();
+    res.status(201).json("add device successfull!!");
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -67,9 +67,9 @@ export const getDevice = async (req, res) => {
 
       device.relay = {
         _id: channel._id,
-        channel: channel.channel,
+        channel: channel?.channel,
         buttons: buttons,
-        isActive: channel.isActive,
+        isActive: channel?.isActive,
         name: relay.name,
         address: relay.address,
       };
@@ -85,7 +85,6 @@ export const deleteDevice = async (req, res) => {
   try {
     const { id } = req.params;
     const device = await Devices.findById({ _id: id });
-    console.log(device);
 
     if (device?.relay) {
       await Channels.findOneAndUpdate(
@@ -129,23 +128,33 @@ export const updateDevice = async (req, res) => {
   try {
     const { mqttPath, relay } = req.body.body;
 
-    const controlRelay = {
-      action: "control",
-      dev_addr: relay.address,
-      status1: relay.channel === 1 ? (!relay.state ? "ON" : "OFF") : "NONE",
-      status2: relay.channel === 2 ? (!relay.state ? "ON" : "OFF") : "NONE",
-      status3: relay.channel === 3 ? (!relay.state ? "ON" : "OFF") : "NONE",
-    };
+    const relayControl = await Nodes.findOne({ address: relay.address });
+
+    let controlRelay;
+    if (relayControl?.isADE === true) {
+      controlRelay = {
+        action: "control",
+        dev_addr: relay.address,
+        status: !relay.state ? "ON" : "OFF",
+      };
+    } else {
+      controlRelay = {
+        action: "control",
+        dev_addr: relay.address,
+        status1: relay.channel === 1 ? (!relay.state ? "ON" : "OFF") : "NONE",
+        status2: relay.channel === 2 ? (!relay.state ? "ON" : "OFF") : "NONE",
+        status3: relay.channel === 3 ? (!relay.state ? "ON" : "OFF") : "NONE",
+      };
+    }
 
     mqttSendMess(mqttPath, controlRelay);
 
     await Channels.findOneAndUpdate(
       { _id: relay._id },
-      { state: !relay.state },
-      { new: true }
+      { state: !relay.state }
     );
 
-    res.status(201).json("Change status success!!");
+    res.status(200).json("Change status success!!");
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

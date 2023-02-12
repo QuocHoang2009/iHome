@@ -2,12 +2,24 @@ import { permitJoin } from "../const/index.js";
 
 import dotenv from "dotenv";
 import mqtt from "mqtt";
+import Ades from "../models/Ades.js";
 import Channels from "../models/Channels.js";
 import Devices from "../models/Devices.js";
 import Homes from "../models/Homes.js";
 import Nodes from "../models/Nodes.js";
 import Rooms from "../models/Rooms.js";
+import Sensors from "../models/Sensors.js";
 dotenv.config();
+
+const relayType = "Relay";
+const buttonType = "Button";
+const sensorType = "Sensor";
+
+export let changeState = false;
+
+export const setChangeState = (state) => {
+  changeState = state;
+};
 
 let node;
 
@@ -25,12 +37,71 @@ client.on("connect", () => {
   });
 });
 
+const updateRelay = async (relayNode, message) => {
+  await Channels.findByIdAndUpdate(relayNode.channels[0], {
+    state: message.status1 === "ON" ? true : false,
+  });
+  await Channels.findByIdAndUpdate(relayNode.channels[1], {
+    state: message.status2 === "ON" ? true : false,
+  });
+  await Channels.findByIdAndUpdate(relayNode.channels[2], {
+    state: message.status3 === "ON" ? true : false,
+  });
+  changeState = true;
+};
+
+const updateADE = async (relayNode, message) => {
+  const channel = await Channels.findById(relayNode.channels[0]);
+
+  if (
+    (channel.state && message?.status === "OFF") ||
+    (channel.state === false && message?.status === "ON")
+  ) {
+    changeState = true;
+    await Channels.findByIdAndUpdate(
+      { _id: relayNode.channels[0] },
+      { state: message?.status === "ON" ? true : false }
+    );
+  }
+
+  const newADE = new Ades({
+    address: message.dev_addr,
+    irms: message.irms,
+    vrms: message.vrms,
+    power: message.power,
+  });
+
+  await newADE.save();
+};
+
+const updateSensor = async (relayNode, message) => {
+  await Sensors.findOneAndUpdate(
+    { address: message.dev_addr },
+    {
+      temp: message.temp,
+      humidity: message.humidity,
+      airquality: message.airquality,
+    }
+  );
+};
+
 const mqttHandle = async (topic, payload) => {
   try {
     const message = JSON.parse(payload.toString());
 
     if (message?.action === "provision") {
       node = message;
+    } else if (message?.action === "telemetry") {
+      const nodeTemp = await Nodes.findOne({ address: message?.dev_addr });
+      if (nodeTemp?.type === relayType) {
+        if (nodeTemp?.isADE === true) {
+          updateADE(nodeTemp, message);
+        } else {
+          updateRelay(nodeTemp, message);
+        }
+      } else if (nodeTemp?.type === sensorType) {
+        updateSensor(nodeTemp, message);
+      }
     }
   } catch (err) {
     console.log(err);
@@ -61,11 +132,12 @@ export const addNodes = async (req, res) => {
 
     const timeInterval = setInterval(async () => {
       if (node) {
+        clearInterval(timeInterval);
         clearTimeout(timer);
         await Nodes.deleteMany({ address: node?.dev_addr });
         await Channels.deleteMany({ address: node?.dev_addr });
 
-        if (node.type === "Relay") {
+        if (node?.type === relayType) {
           const channels = [];
 
           for (let i = 0; i < node?.numChannel; i++) {
@@ -89,12 +161,13 @@ export const addNodes = async (req, res) => {
             address: node?.dev_addr,
             type: node?.type,
             numChannel: node?.numChannel,
+            isADE: node?.isADE,
             channels: channels,
             isActive: true,
           });
 
           node = await newNode.save();
-        } else if (node.type === "Button") {
+        } else if (node?.type === "Button") {
           const newNode = new Nodes({
             name: "New Button",
             home: id,
@@ -106,20 +179,26 @@ export const addNodes = async (req, res) => {
             isActive: true,
           });
           node = await newNode.save();
-        } else if (node.type === "Sensor") {
+        } else if (node?.type === "Sensor") {
+          const newSensor = new Sensors({
+            address: node?.dev_addr,
+          });
+
+          const sensor = await newSensor.save();
+
           const newNode = new Nodes({
             name: "New Sensor",
             home: id,
             room: room ? room : "",
             address: node?.dev_addr,
+            sensor: sensor,
             type: node?.type,
             isActive: true,
           });
           node = await newNode.save();
         }
-
-        res.status(200).json(node);
         node = undefined;
+        res.status(200).json("Add node success!");
       }
     }, 1010);
   } catch (err) {

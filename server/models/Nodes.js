@@ -28,6 +28,9 @@ const NodesSchema = new mongoose.Schema(
     numChannel: {
       type: Number,
     },
+    isADE: {
+      type: Boolean,
+    },
     isActive: {
       type: Boolean,
       required: true,

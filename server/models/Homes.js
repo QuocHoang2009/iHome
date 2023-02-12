@@ -17,6 +17,7 @@ const HomesSchema = new mongoose.Schema(
     mqttPath: {
       type: String,
       require: true,
+      unique: true,
       min: 2,
       max: 50,
     },
@@ -27,6 +28,10 @@ const HomesSchema = new mongoose.Schema(
       max: 50,
     },
     relay: {
+      type: Object,
+      default: null,
+    },
+    sensor: {
       type: Object,
       default: null,
     },

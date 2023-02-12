@@ -7,7 +7,6 @@ const RoomsSchema = new mongoose.Schema(
       required: true,
       min: 2,
       max: 50,
-      unique: true,
     },
     home: {
       type: Object,

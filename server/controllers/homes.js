@@ -1,3 +1,4 @@
+import Channels from "../models/Channels.js";
 import Homes from "../models/Homes.js";
 import HomesMember from "../models/HomesMember.js";
 
@@ -28,6 +29,17 @@ export const addHomes = async (req, res) => {
   }
 };
 
+export const getHome = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const home = await Homes.findById(id);
+    res.status(200).json(home);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
 export const getAllHomes = async (req, res) => {
   try {
     const { id } = req.params;
@@ -44,5 +56,34 @@ export const getAllHomes = async (req, res) => {
     res.status(200).json(homes);
   } catch (err) {
     res.status(404).json({ message: err.message });
+  }
+};
+
+export const linkHomes = async (req, res) => {
+  try {
+    const { home, relay } = req.body.body;
+
+    await Homes.findByIdAndUpdate(home, { relay: relay });
+    await Channels.findByIdAndUpdate(relay, { link: home, typeLink: "Home" });
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const unLinkHome = async (req, res) => {
+  try {
+    const { relayChannel, home } = req.body.body;
+
+    await Homes.findOneAndUpdate({ _id: home }, { relay: null }, { new: true });
+
+    await Channels.findOneAndUpdate(
+      { _id: relayChannel },
+      { typeLink: "", link: "" },
+      { new: true }
+    );
+
+    res.status(201).json("Change status success!!");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

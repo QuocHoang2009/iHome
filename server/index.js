@@ -9,6 +9,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { register } from "./controllers/auth.js";
+import adesRoutes from "./routes/ades.js";
 import authRoutes from "./routes/auth.js";
 import devicesRoutes from "./routes/devices.js";
 import homesRoutes from "./routes/homes.js";
@@ -47,6 +48,7 @@ const upload = multer({ storage });
 
 /* ROUTES WITH FILES */
 app.post("/auth/register", upload.single("picture"), register);
+app.post("/homes/add/:id", upload.single("picture"), register);
 
 /* ROUTES */
 app.use("/auth", authRoutes);
@@ -55,6 +57,7 @@ app.use("/nodes", nodesRoutes);
 app.use("/homes", homesRoutes);
 app.use("/rooms", roomsRoutes);
 app.use("/devices", devicesRoutes);
+app.use("/ades", adesRoutes);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;
@@ -65,9 +68,5 @@ mongoose
   })
   .then(() => {
     app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
-
-    /* ADD DATA ONE TIME */
-    // User.insertMany(users);
-    // Post.insertMany(posts);
   })
   .catch((error) => console.log(`${error} did not connect`));
