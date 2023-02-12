@@ -1,0 +1,31 @@
+Từ Hub gửi lên server mybk/up
+{
+	"action": "provision",
+	"dev_addr": "64898651", //địa chỉ của node
+	"type": "Relay", "Button", "Sensor"
+	"numChannel": 3
+}
+
+
+
+Từ Server xuống Hub mybk/down
+
+{
+	"action": "command",
+	"command": "leave_req",
+	"dev_addr": ".." (địa chỉ của thiết bị rời đi)
+}
+
+{
+	"action": "link_dev",
+	"btn_addr": "",
+	"relay_addr": "",
+}
+
+{
+	"action": "control",
+	"dev_addr": "00124B000418FD81",
+	"status1": "ON","OFF", "NONE"
+	"status2": "OFF",
+	"status3": "OFF"
+}
