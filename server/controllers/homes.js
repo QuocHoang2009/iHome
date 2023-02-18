@@ -63,8 +63,10 @@ export const linkHomes = async (req, res) => {
   try {
     const { home, relay } = req.body.body;
 
-    await Homes.findByIdAndUpdate(home, { relay: relay });
+    const homeReturn = await Homes.findByIdAndUpdate(home, { relay: relay });
     await Channels.findByIdAndUpdate(relay, { link: home, typeLink: "Home" });
+    console.log(homeReturn);
+    res.status(201).json(homeReturn);
   } catch (err) {
     res.status(404).json({ message: err.message });
   }
@@ -74,7 +76,11 @@ export const unLinkHome = async (req, res) => {
   try {
     const { relayChannel, home } = req.body.body;
 
-    await Homes.findOneAndUpdate({ _id: home }, { relay: null }, { new: true });
+    const homeReturn = await Homes.findOneAndUpdate(
+      { _id: home },
+      { relay: null },
+      { new: true }
+    );
 
     await Channels.findOneAndUpdate(
       { _id: relayChannel },
@@ -82,7 +88,9 @@ export const unLinkHome = async (req, res) => {
       { new: true }
     );
 
-    res.status(201).json("Change status success!!");
+    console.log(homeReturn);
+
+    res.status(201).json(homeReturn);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
