@@ -210,12 +210,14 @@ const HomePage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [sensor, setSensor] = useState();
-    const [isReset, setIsReset] = useState();
     const [currentHome, setCurrentHome] = useState(useSelector((state)=> state.currentHome));
-
-    const handleReset = ()=>{
-        setIsReset(!isReset);
-    }
+    const [home, setHome] = useState(useSelector((state)=>state.currentHome));
+    const [relay, setRelay] = useState();
+    const [data, setData] = useState();
+    const [isReset, setIsReset] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
+    const [selectedValue, setSelectedValue] = useState();
+    const [openModalDelete, setOpenModalDelete] = useState(false);
     
     useEffect(()=>{
         (async ()=>{
@@ -227,15 +229,114 @@ const HomePage = () => {
         })()
     }, [isReset, currentHome._id, dispatch]);
 
+    useEffect(()=>{
+        (async ()=>{
+            if(home?.relay){
+                const api = inforADE + home.relay;
+                const res = await axios.get(api);
+                const {relay, data} = res.data;
+                setRelay(relay);
+                setData(data);
+            }
+            else{
+                setRelay(null);
+                setData(null);
+            }
+        })()
+    }, [isReset, home?.relay, home]);
+
     const handleEdit = ()=>{
         navigate('/edithome');
+    }
+
+    const handleClickOpenModal = () => {
+        setOpenModal(true);
+    };
+
+    const handleCloseModal = async (value)=>{
+        setOpenModal(false);
+        setSelectedValue(value);
+
+        const data = {
+            home: home._id,
+            relay: value?.channels[0]._id
+        }
+
+        const res = await axios.patch(linkHome, {
+            body: data,
+        })
+        console.log(res.data)
+        dispatch(setCurrentHome({currentHome: res.data}))
+    }
+
+    const handleChangeState = async ()=>{
+        const data = {
+            mqttPath: home.mqttPath,
+            relay: relay,
+        }
+
+        await axios.patch(updateDevice, {
+            body: data,
+        })
+        .then((res) => {
+            setIsReset(!isReset);
+        })
+        .catch((error) => {
+            if(error?.response){
+                console.log(error.response.data);
+            }
+            else{
+                console.log(error);
+            }
+        });
+    }
+
+    const handleUnlinkRelay = async ()=>{
+        setOpenModalDelete(false);
+        const data = {
+            relayChannel: relay._id,
+            home: home._id
+        }
+
+        const res = await axios.patch(unLinkHome, {
+            body: data,
+        })
+        console.log(res.data)
+        dispatch(setCurrentHome({currentHome: res.data}))
+    }
+
+    const deleteHandle = ()=>{
+        setOpenModalDelete(true);
     }
 
     return (
         <Box m="20px">
             <HeaderChild title="My Home" subtitle="Information Home" addButton="Edit Home" buttonHandle={handleEdit}/>
             <Stack direction="row" spacing="2px" width="100%" >
-                <RelaySession width="75%" handleReset={handleReset} />
+                <Box width="75%">
+                    {(openModalDelete && (
+                        <ModalDelete 
+                            open={openModalDelete} 
+                            handleModal={setOpenModalDelete} 
+                            name={"Unlink Relay"}
+                            handleDelete={handleUnlinkRelay}
+                    />))}
+
+                    {relay ? (
+                        <Stack direction="row" spacing="2px" width="100%">
+                            <BoxEdit title="Relay" button="Unlink" buttonHandle={deleteHandle}>
+                                {(relay?.state !== undefined) && <Switch checked={relay?.state} onChange={handleChangeState}/>}
+                            </BoxEdit>
+                        </Stack>
+                    ) :(
+                        <ButtonStyle width="150px" height="60px" name="Link with relay ADE" handleClick={handleClickOpenModal}/>
+                    )}
+                    <RelaysDialog
+                        selectedValue={selectedValue}
+                        open={openModal}
+                        onClose={handleCloseModal}
+                    />
+                </Box>
                 <div>Sensor</div>
             </Stack>
         </Box>
