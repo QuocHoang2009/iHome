@@ -59,14 +59,14 @@
 #define MQTT_QOS_LEVEL 2
 #define USE_ESPTOUCH_V2
 // #define CLEAR_WIFI_CONFIG_ON_RESET
-// #define CLEAR_ZB_DEV_LIST_ON_RESET
+#define CLEAR_ZB_DEV_LIST_ON_RESET
 // #define PRINT_ZNP_ATTRIBUTES
 // #define PRINT_TELEMETRY_DATA
 #define USE_DEFAULT_MQTT_BROKER
 // #define REBOOT_ON_RESET
 
 /* Global variables for tasks */
-static const char *TAG = "smarthome_app";
+static const char* TAG = "smarthome_app";
 static time_t now;
 static struct tm timeinfo;
 static char strftime_buf[64];
@@ -113,14 +113,14 @@ static void dev_check_timeslot(void)
     struct tm temp_time;
     localtime_r(&now, &temp_time);
 
-    zb_dev_timeslot_t *temp = get_timeslot_list();
+    zb_dev_timeslot_t* temp = get_timeslot_list();
     while (temp != NULL)
     {
-        zb_dev_t *dev = zb_get_device_with_ieee_addr(temp->ieee_addr);
+        zb_dev_t* dev = zb_get_device_with_ieee_addr(temp->ieee_addr);
         if (dev != NULL)
         {
             if (temp->timeslot.time_on.hours +
-                    (temp->timeslot.time_on.am_pm ? 12 : 0) !=
+                (temp->timeslot.time_on.am_pm ? 12 : 0) !=
                 temp_time.tm_hour)
                 goto check_time_off;
             if (temp->timeslot.time_on.minutes != temp_time.tm_min)
@@ -140,7 +140,7 @@ static void dev_check_timeslot(void)
                 .Radius = 0x0F,
             };
 
-            uint8_t ctrl_data[2] = {0, 0};
+            uint8_t ctrl_data[2] = { 0, 0 };
 
             if (temp->cluster_id == CLUSTER_ID_RELAY_CTRL)
             {
@@ -164,7 +164,7 @@ static void dev_check_timeslot(void)
 
         check_time_off:
             if (temp->timeslot.time_off.hours +
-                    (temp->timeslot.time_off.am_pm ? 12 : 0) !=
+                (temp->timeslot.time_off.am_pm ? 12 : 0) !=
                 temp_time.tm_hour)
                 goto check_next_timeslot;
             if (temp->timeslot.time_off.minutes != temp_time.tm_min)
@@ -202,7 +202,7 @@ static void dev_check_timeslot(void)
 
 static void znp_check_alive(void)
 {
-    zb_dev_t *temp = zb_get_device_list();
+    zb_dev_t* temp = zb_get_device_list();
     while (temp != NULL)
     {
         if (temp->cluster_id != UNKNOWN_CLUSTER_ID)
@@ -212,14 +212,14 @@ static void znp_check_alive(void)
             {
                 temp->is_alive = false;
                 ESP_LOGI(TAG, "0x%016llX has disconnected. Last seen: %s",
-                         temp->ieee_addr, ctime(&temp->last_seen));
+                    temp->ieee_addr, ctime(&temp->last_seen));
             }
         }
         temp = temp->next;
     }
 }
 
-static void znp_link_relay_button_task(void *arg)
+static void znp_link_relay_button_task(void* arg)
 {
     union
     {
@@ -263,7 +263,7 @@ static void znp_link_relay_button_task(void *arg)
 
 static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
 {
-    zb_dev_t *dev = zb_get_device_with_short_addr(af_incoming_msg.SrcAddr);
+    zb_dev_t* dev = zb_get_device_with_short_addr(af_incoming_msg.SrcAddr);
 
     if (dev == NULL)
         return;
@@ -272,24 +272,24 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
 
     if (af_incoming_msg.SrcEndpoint == ENDPOINT_PROVISION)
     {
+        zb_set_device_cluster_id(dev->ieee_addr,
+            af_incoming_msg.ClusterID);
         switch (af_incoming_msg.ClusterID)
         {
         case CLUSTER_ID_RELAY_CTRL:
         case CLUSTER_ID_SENSOR:
         case CLUSTER_ID_COMPTEUR:
+        case CLUSTER_ID_BUTTON:
         {
-            char *provision_msg = zb_get_device_provision_msg(dev);
+            char* provision_msg = zb_get_device_provision_msg(dev);
             esp_mqtt_client_publish(client, MQTT_PUB_TOPIC, provision_msg,
-                                    strlen(provision_msg), MQTT_QOS_LEVEL,
-                                    0);
+                strlen(provision_msg), MQTT_QOS_LEVEL,
+                0);
+            printf("%s", provision_msg);
             free(provision_msg);
             provision_msg = NULL;
         }
-            __attribute__((fallthrough));
-        case CLUSTER_ID_BUTTON:
-            zb_set_device_cluster_id(dev->ieee_addr,
-                                     af_incoming_msg.ClusterID);
-            break;
+        __attribute__((fallthrough));
 
         default:
             znp_zdo_mgmt_leave_req(dev->short_addr, dev->ieee_addr, 0x02);
@@ -305,7 +305,7 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
 
         if (node_relay_addr != 0 && node_button_addr != 0)
             xTaskCreate(znp_link_relay_button_task, "link_relay_button",
-                        1024 * 2, NULL, 10, NULL);
+                1024 * 2, NULL, 10, NULL);
     }
     else if (af_incoming_msg.SrcEndpoint == ENDPOINT_TELEMETRY)
     {
@@ -314,10 +314,10 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
         case CLUSTER_ID_RELAY_CTRL:
         {
             zb_dev_data_t relay_data =
-                *(zb_dev_data_t *)af_incoming_msg.Data;
+                *(zb_dev_data_t*)af_incoming_msg.Data;
 #ifdef PRINT_TELEMETRY_DATA
             ESP_LOGI(TAG, "relay_channel_num: %u",
-                     relay_data.relay_channel_num);
+                relay_data.relay_channel_num);
             for (uint8_t i = 0; i < relay_data.relay_channel_num; i++)
             {
                 ESP_LOGI(
@@ -326,17 +326,17 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
             }
 #endif // PRINT_TELEMETRY_DATA
             zb_update_device_data(dev->ieee_addr, af_incoming_msg.ClusterID,
-                                  &relay_data);
+                &relay_data);
         }
         break;
 
         case CLUSTER_ID_BUTTON:
         {
             zb_dev_data_t button_data =
-                *(zb_dev_data_t *)af_incoming_msg.Data;
+                *(zb_dev_data_t*)af_incoming_msg.Data;
 #ifdef PRINT_TELEMETRY_DATA
             ESP_LOGI(TAG, "button_channel_num: %u",
-                     button_data.relay_channel_num);
+                button_data.relay_channel_num);
             for (uint8_t i = 0; i < button_data.relay_channel_num; i++)
             {
                 ESP_LOGI(
@@ -349,7 +349,7 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
 
         case CLUSTER_ID_SENSOR:
         {
-            zb_sensor_t zb_sensor = *(zb_sensor_t *)af_incoming_msg.Data;
+            zb_sensor_t zb_sensor = *(zb_sensor_t*)af_incoming_msg.Data;
             zb_dev_data_t sensor_data = {
                 .temperature = zb_sensor.T1 + zb_sensor.T2 / 10.0,
                 .humidity = zb_sensor.RH1 + zb_sensor.RH2 / 10.0,
@@ -363,14 +363,14 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
             ESP_LOGI(TAG, "Air Quality: %f", sensor_data.air_quality);
 #endif // PRINT_TELEMETRY_DATA
             zb_update_device_data(dev->ieee_addr, af_incoming_msg.ClusterID,
-                                  &sensor_data);
+                &sensor_data);
         }
         break;
 
         case CLUSTER_ID_COMPTEUR:
         {
             zb_dev_data_t compteur_data =
-                *(zb_dev_data_t *)af_incoming_msg.Data;
+                *(zb_dev_data_t*)af_incoming_msg.Data;
 
             compteur_data.power /= 1.316340539;
 
@@ -379,10 +379,10 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
             ESP_LOGI(TAG, "Vrms: %.2f", compteur_data.vrms);
             ESP_LOGI(TAG, "Active Power: %.2f", compteur_data.power);
             ESP_LOGI(TAG, "Relay State: %s",
-                     compteur_data.relay ? "on" : "off");
+                compteur_data.relay ? "on" : "off");
 #endif // PRINT_TELEMETRY_DATA
             zb_update_device_data(dev->ieee_addr, af_incoming_msg.ClusterID,
-                                  &compteur_data);
+                &compteur_data);
         }
         break;
 
@@ -393,7 +393,7 @@ static void znp_af_incoming_msg_handler(af_incoming_msg_t af_incoming_msg)
 }
 
 /* ZNP message callback */
-void znp_message_callback(uint16_t cmd, uint8_t *data, uint8_t len)
+void znp_message_callback(uint16_t cmd, uint8_t* data, uint8_t len)
 {
     switch (cmd)
     {
@@ -411,7 +411,7 @@ void znp_message_callback(uint16_t cmd, uint8_t *data, uint8_t len)
     case AF_INCOMING_MSG:
     {
         ESP_LOGI(TAG, "AF_INCOMING_MSG");
-        af_incoming_msg_t af_incoming_msg = *(af_incoming_msg_t *)data;
+        af_incoming_msg_t af_incoming_msg = *(af_incoming_msg_t*)data;
 #ifdef PRINT_ZNP_ATTRIBUTES
         ESP_LOGI(TAG, "GroupID: 0x%04X", af_incoming_msg.GroupID);
         ESP_LOGI(TAG, "ClusterID: 0x%04X", af_incoming_msg.ClusterID);
@@ -423,7 +423,7 @@ void znp_message_callback(uint16_t cmd, uint8_t *data, uint8_t len)
         ESP_LOGI(TAG, "SecurityUse: 0x%02X", af_incoming_msg.SecurityUse);
         ESP_LOGI(TAG, "Timestamp: 0x%08X", af_incoming_msg.Timestamp);
         ESP_LOGI(TAG, "TransSeqNumber: 0x%02X",
-                 af_incoming_msg.TransSeqNumber);
+            af_incoming_msg.TransSeqNumber);
         ESP_LOGI(TAG, "Len: 0x%02X", af_incoming_msg.Len);
         if (af_incoming_msg.Len > 0)
         {
@@ -431,12 +431,12 @@ void znp_message_callback(uint16_t cmd, uint8_t *data, uint8_t len)
             printf(LOG_COLOR_I "(HEX) " LOG_RESET_COLOR);
             for (uint8_t i = 0; i < af_incoming_msg.Len; i++)
                 printf(LOG_COLOR_I "%02X " LOG_RESET_COLOR,
-                       af_incoming_msg.Data[i]);
+                    af_incoming_msg.Data[i]);
             printf("\n");
             printf(LOG_COLOR_I "(DEC) " LOG_RESET_COLOR);
             for (uint8_t i = 0; i < af_incoming_msg.Len; i++)
                 printf(LOG_COLOR_I "%d " LOG_RESET_COLOR,
-                       af_incoming_msg.Data[i]);
+                    af_incoming_msg.Data[i]);
             printf("\n");
         }
         else
@@ -449,15 +449,15 @@ void znp_message_callback(uint16_t cmd, uint8_t *data, uint8_t len)
     case ZDO_TC_DEV_IND:
     {
         ESP_LOGI(TAG, "ZDO_TC_DEV_IND");
-        zdo_tc_dev_ind_t zdo_tc_dev_ind = *(zdo_tc_dev_ind_t *)data;
+        zdo_tc_dev_ind_t zdo_tc_dev_ind = *(zdo_tc_dev_ind_t*)data;
 #ifdef PRINT_ZNP_ATTRIBUTES
         ESP_LOGI(TAG, "SrcNwkAddr: 0x%04X", zdo_tc_dev_ind.SrcNwkAddr);
         ESP_LOGI(TAG, "SrcIEEEAdrr: 0x%016llX", zdo_tc_dev_ind.SrcIEEEAddr);
         ESP_LOGI(TAG, "ParentNwkAddr: 0x%04X",
-                 zdo_tc_dev_ind.ParentNwkAddr);
+            zdo_tc_dev_ind.ParentNwkAddr);
 #endif // PRINT_ZNP_ATTRIBUTES
         zb_add_device(zdo_tc_dev_ind.SrcNwkAddr,
-                      zdo_tc_dev_ind.SrcIEEEAddr);
+            zdo_tc_dev_ind.SrcIEEEAddr);
     }
     break;
 
@@ -474,7 +474,7 @@ void znp_message_callback(uint16_t cmd, uint8_t *data, uint8_t len)
     }
 }
 
-static void znp_task(void *arg)
+static void znp_task(void* arg)
 {
     zb_device_init();
 
@@ -513,26 +513,26 @@ static void znp_task(void *arg)
 #endif // USE_ZNP_TASK
 
 #ifdef USE_WIFI_TASK
-static void log_error_if_nonzero(const char *message, int error_code)
+static void log_error_if_nonzero(const char* message, int error_code)
 {
     if (!error_code)
         ESP_LOGE(TAG, "Last error %s: 0x%x", message, error_code);
 }
 
-static void mqtt_data_handler(const char *topic, const char *payload)
+static void mqtt_data_handler(const char* topic, const char* payload)
 {
     printf("TOPIC = %s\n", topic);
     printf("DATA = %s\n", payload);
 
-    cJSON *json_payload = cJSON_Parse(payload);
-    cJSON *action = cJSON_GetObjectItem(json_payload, "action");
+    cJSON* json_payload = cJSON_Parse(payload);
+    cJSON* action = cJSON_GetObjectItem(json_payload, "action");
     if (cJSON_IsString(action) &&
         (xEventGroupGetBits(event_group) & ZNP_COORD_STARTED_BIT))
     {
         /* Handle action command */
         if (!strcmp(action->valuestring, "command"))
         {
-            cJSON *command = cJSON_GetObjectItem(json_payload, "command");
+            cJSON* command = cJSON_GetObjectItem(json_payload, "command");
             if (cJSON_IsString(command))
             {
                 /* Handle command permit join */
@@ -544,19 +544,19 @@ static void mqtt_data_handler(const char *topic, const char *payload)
                 /* Handle command leave request */
                 else if (!strcmp(command->valuestring, "leave_req"))
                 {
-                    cJSON *dev_addr =
+                    cJSON* dev_addr =
                         cJSON_GetObjectItem(json_payload, "dev_addr");
                     if (cJSON_IsString(dev_addr))
                     {
                         uint64_t d_addr =
                             strtoull(dev_addr->valuestring, NULL, 16);
 
-                        zb_dev_t *dev = zb_get_device_with_ieee_addr(d_addr);
+                        zb_dev_t* dev = zb_get_device_with_ieee_addr(d_addr);
                         if (dev != NULL)
                         {
                             ESP_LOGI(TAG, "0x%016llX will be removed", d_addr);
                             znp_zdo_mgmt_leave_req(dev->short_addr,
-                                                   dev->ieee_addr, 0x02);
+                                dev->ieee_addr, 0x02);
                             zb_remove_device(d_addr);
                         }
                     }
@@ -574,134 +574,175 @@ static void mqtt_data_handler(const char *topic, const char *payload)
         }
         else if (!strcmp(action->valuestring, "control"))
         {
-            cJSON *dev_addr = cJSON_GetObjectItem(json_payload, "dev_addr");
+            cJSON* dev_addr = cJSON_GetObjectItem(json_payload, "dev_addr");
             if (cJSON_IsString(dev_addr))
             {
                 uint64_t d_addr = strtoull(dev_addr->valuestring, NULL, 16);
                 ESP_LOGI(TAG, "Control device 0x%016llX", d_addr);
 
-                zb_dev_t *dev = zb_get_device_with_ieee_addr(d_addr);
+                zb_dev_t* dev = zb_get_device_with_ieee_addr(d_addr);
                 if (dev != NULL)
                 {
-                    af_data_request_t control_data = {
-                        .DstAddr = dev->short_addr,
-                        .DestEndpoint = ENDPOINT_COMMAND,
-                        .SrcEndpoint = ENDPOINT_COMMAND,
-                        .ClusterID = 0x0000,
-                        .TransID = 0,
-                        .Options = 0,
-                        .Radius = 0x0F,
-                    };
-                    ESP_LOGI(TAG, "Control device 0x%016llX", d_addr);
-
-                    switch (dev->cluster_id)
+                    timeslot_t timeslot;
+                    if (json_parse_timeslot(json_payload, &timeslot) ==
+                        ESP_OK)
                     {
-                    case CLUSTER_ID_RELAY_CTRL:
-                    {
-                        cJSON *channel = cJSON_GetObjectItem(
-                            json_payload, "channel");
-                        cJSON *status = cJSON_GetObjectItem(
-                            json_payload, "status");
-
-                        ESP_LOGI(TAG, "channel %d", channel->valueint);
-                        ESP_LOGI(TAG, "status %d", status->valueint);
-
-                        if (!cJSON_IsNumber(channel) &&
-                            !cJSON_IsBool(status))
-                            goto end_json_handler;
-
-                        ESP_LOGI(TAG, "123e 0x%016llX", d_addr);
-
-                        union
+                        if (dev->cluster_id == CLUSTER_ID_RELAY_CTRL)
                         {
-                            uint8_t raw[2];
-                            struct
+                            cJSON* channel1 =
+                                cJSON_GetObjectItem(json_payload, "channel1");
+                            cJSON* channel2 =
+                                cJSON_GetObjectItem(json_payload, "channel2");
+                            cJSON* channel3 =
+                                cJSON_GetObjectItem(json_payload, "channel3");
+
+                            if (cJSON_IsBool(channel1) &&
+                                cJSON_IsBool(channel2) &&
+                                cJSON_IsBool(channel3))
                             {
-                                uint8_t command_option;
+                                timeslot.channel_1 = cJSON_IsTrue(channel1);
+                                timeslot.channel_2 = cJSON_IsTrue(channel2);
+                                timeslot.channel_3 = cJSON_IsTrue(channel3);
+                            }
+                            else
+                                goto end_json_handler;
+                        }
+                        set_timeslot_to_dev(dev->ieee_addr, dev->cluster_id,
+                            &timeslot);
+                        print_timeslot_list();
+                    }
+                    else
+                    {
+                        af_data_request_t control_data = {
+                            .DstAddr = dev->short_addr,
+                            .DestEndpoint = ENDPOINT_COMMAND,
+                            .SrcEndpoint = ENDPOINT_COMMAND,
+                            .ClusterID = 0x0000,
+                            .TransID = 0,
+                            .Options = 0,
+                            .Radius = 0x0F,
+                        };
+
+                        switch (dev->cluster_id)
+                        {
+                        case CLUSTER_ID_RELAY_CTRL:
+                        {
+                            cJSON* relay1 = cJSON_GetObjectItem(
+                                json_payload, "status1");
+                            cJSON* relay2 = cJSON_GetObjectItem(
+                                json_payload, "status2");
+                            cJSON* relay3 = cJSON_GetObjectItem(
+                                json_payload, "status3");
+
+                            if (!cJSON_IsString(relay1) &&
+                                !cJSON_IsString(relay2) &&
+                                !cJSON_IsString(relay3))
+                                goto end_json_handler;
+
+                            union
+                            {
+                                uint8_t raw[2];
                                 struct
                                 {
-                                    // Bit state
-                                    uint8_t relay1 : 1;
-                                    uint8_t relay2 : 1;
-                                    uint8_t relay3 : 1;
-                                    uint8_t : 2;
-                                    uint8_t relay_mask1 : 1;
-                                    uint8_t relay_mask2 : 1;
-                                    uint8_t relay_mask3 : 1;
+                                    uint8_t command_option;
+                                    struct
+                                    {
+                                        // Bit state
+                                        uint8_t relay1 : 1;
+                                        uint8_t relay2 : 1;
+                                        uint8_t relay3 : 1;
+                                        uint8_t : 2;
+                                        uint8_t relay_mask1 : 1;
+                                        uint8_t relay_mask2 : 1;
+                                        uint8_t relay_mask3 : 1;
+                                    };
                                 };
-                            };
-                        } relay_ctrl;
+                            } relay_ctrl;
 
-                        switch (channel->valueint)
+                            if (cJSON_IsString(relay1))
+                            {
+                                if (strcmp(relay1->valuestring, "NONE") == 0)
+                                {
+                                    relay_ctrl.relay_mask1 = false;
+                                }
+                                else
+                                {
+                                    relay_ctrl.relay_mask1 = true;
+                                    relay_ctrl.relay1 =
+                                        (strcmp(relay1->valuestring, "ON") ==
+                                            0);
+                                }
+                            }
+
+                            if (cJSON_IsString(relay2))
+                            {
+                                if (strcmp(relay2->valuestring, "NONE") == 0)
+                                {
+                                    relay_ctrl.relay_mask2 = false;
+                                }
+                                else
+                                {
+                                    relay_ctrl.relay_mask2 = true;
+                                    relay_ctrl.relay2 =
+                                        (strcmp(relay2->valuestring, "ON") ==
+                                            0);
+                                }
+                            }
+
+                            if (cJSON_IsString(relay3))
+                            {
+                                if (strcmp(relay3->valuestring, "NONE") == 0)
+                                {
+                                    relay_ctrl.relay_mask3 = false;
+                                }
+                                else
+                                {
+                                    relay_ctrl.relay_mask3 = true;
+                                    relay_ctrl.relay3 =
+                                        (strcmp(relay3->valuestring, "ON") ==
+                                            0);
+                                }
+                            }
+
+                            /* @Note1: Message will be wrong without delay.
+                             * Reason: Unknown */
+                            vTaskDelay(1);
+
+                            relay_ctrl.command_option = 0;
+
+                            control_data.Data = relay_ctrl.raw;
+                            control_data.Len = sizeof(relay_ctrl.raw);
+                        }
+                        break;
+
+                        case CLUSTER_ID_COMPTEUR:
                         {
-                        case 1:
-                            relay_mask1 = true;
-                            relay1 = state.valueint;
-                            relay_mask2 = false;
-                            relay_mask3 = false;
-                            break;
+                            cJSON* relay =
+                                cJSON_GetObjectItem(json_payload, "status");
 
-                        case 2:
-                            relay_mask2 = true;
-                            relay2 = state.valueint;
-                            relay_mask1 = false;
-                            relay_mask3 = false;
-                            break;
+                            uint8_t relay_ade = 0;
 
-                        case 3:
-                            relay_mask3 = true;
-                            relay3 = state.valueint;
-                            relay_mask2 = false;
-                            relay_mask1 = false;
-                            break;
+                            if (cJSON_IsString(relay))
+                            {
+                                if (strcmp(relay->valuestring, "ON") == 0)
+                                    relay_ade = 1;
+                            }
+                            else
+                                goto end_json_handler;
+
+                            /* See @Note1 */
+                            vTaskDelay(1);
+
+                            control_data.Data = &relay_ade;
+                            control_data.Len = sizeof(relay_ade);
+                        }
+                        break;
 
                         default:
                             break;
                         }
-                        ESP_LOGI(TAG, "456 0x%016llX", d_addr);
-
-                        /* @Note1: Message will be wrong without delay.
-                         * Reason: Unknown */
-                        vTaskDelay(1);
-
-                        relay_ctrl.command_option = 0;
-
-                        control_data.Data = relay_ctrl.raw;
-                        control_data.Len = sizeof(relay_ctrl.raw);
+                        znp_af_data_request(control_data);
                     }
-
-                    case CLUSTER_ID_COMPTEUR:
-                    {
-                        cJSON *relay =
-                            cJSON_GetObjectItem(json_payload, "status");
-
-                        uint8_t relay_ade = 0;
-
-                        if (cJSON_IsString(relay))
-                        {
-                            if (strcmp(relay->valuestring, "ON") == 0)
-                                relay_ade = 1;
-                        }
-                        else
-                            goto end_json_handler;
-
-                        /* See @Note1 */
-                        vTaskDelay(1);
-
-                        control_data.Data = &relay_ade;
-                        control_data.Len = sizeof(relay_ade);
-                    }
-                    break;
-
-                    default:
-                        ESP_LOGI(TAG, "Don't have type device!!");
-                        break;
-                    }
-                    znp_af_data_request(control_data);
-                }
-                else
-                {
-                    ESP_LOGI(TAG, "Don't have device's address!!");
                 }
             }
         }
@@ -711,8 +752,8 @@ end_json_handler:
     cJSON_Delete(json_payload);
 }
 
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
-                               int32_t event_id, void *event_data)
+static void mqtt_event_handler(void* handler_args, esp_event_base_t base,
+    int32_t event_id, void* event_data)
 {
     esp_mqtt_event_handle_t event = event_data;
 
@@ -743,8 +784,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 
     case MQTT_EVENT_DATA:
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        char *topic = malloc(event->topic_len + 1);
-        char *data = malloc(event->data_len + 1);
+        char* topic = malloc(event->topic_len + 1);
+        char* data = malloc(event->data_len + 1);
 
         sprintf(topic, "%.*s", event->topic_len, event->topic);
         sprintf(data, "%.*s", event->data_len, event->data);
@@ -761,9 +802,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
             MQTT_ERROR_TYPE_TCP_TRANSPORT)
         {
             log_error_if_nonzero("reported from esp-tls",
-                                 event->error_handle->esp_tls_last_esp_err);
+                event->error_handle->esp_tls_last_esp_err);
             log_error_if_nonzero("reported from tls stack",
-                                 event->error_handle->esp_tls_stack_err);
+                event->error_handle->esp_tls_stack_err);
             log_error_if_nonzero(
                 "captured as transport's socket errno",
                 event->error_handle->esp_transport_sock_errno);
@@ -783,8 +824,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     }
 }
 
-static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data)
+static void event_handler(void* arg, esp_event_base_t event_base,
+    int32_t event_id, void* event_data)
 {
     if (event_base == SC_EVENT)
     {
@@ -802,22 +843,22 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         {
             ESP_LOGI(TAG, "Got SSID and password");
 
-            smartconfig_event_got_ssid_pswd_t *evt =
-                (smartconfig_event_got_ssid_pswd_t *)event_data;
+            smartconfig_event_got_ssid_pswd_t* evt =
+                (smartconfig_event_got_ssid_pswd_t*)event_data;
             wifi_config_t wifi_config;
-            uint8_t ssid[33] = {0};
-            uint8_t password[65] = {0};
+            uint8_t ssid[33] = { 0 };
+            uint8_t password[65] = { 0 };
 
             bzero(&wifi_config, sizeof(wifi_config_t));
             memcpy(wifi_config.sta.ssid, evt->ssid,
-                   sizeof(wifi_config.sta.ssid));
+                sizeof(wifi_config.sta.ssid));
             memcpy(wifi_config.sta.password, evt->password,
-                   sizeof(wifi_config.sta.password));
+                sizeof(wifi_config.sta.password));
             wifi_config.sta.bssid_set = evt->bssid_set;
             if (wifi_config.sta.bssid_set == true)
             {
                 memcpy(wifi_config.sta.bssid, evt->bssid,
-                       sizeof(wifi_config.sta.bssid));
+                    sizeof(wifi_config.sta.bssid));
             }
 
             memcpy(ssid, evt->ssid, sizeof(evt->ssid));
@@ -828,8 +869,8 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 #ifndef USE_DEFAULT_MQTT_BROKER
             if (evt->type == SC_TYPE_ESPTOUCH_V2)
             {
-                esp_smartconfig_get_rvd_data((uint8_t *)mqtt_server_uri,
-                                             sizeof(mqtt_server_uri));
+                esp_smartconfig_get_rvd_data((uint8_t*)mqtt_server_uri,
+                    sizeof(mqtt_server_uri));
                 ESP_LOGI(TAG, "MQTT SERVER: %s", mqtt_server_uri);
                 if (mqtt_store_uri(mqtt_server_uri) == ESP_FAIL)
                     ESP_LOGW(TAG, "Invalid MQTT server uri");
@@ -869,7 +910,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         xEventGroupSetBits(event_group, WIFI_CONNECTED_BIT);
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         device_ipv4 = event->ip_info.ip;
     }
@@ -877,15 +918,15 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 
 static void publish_new_data(void)
 {
-    zb_dev_t *dev = zb_get_device_list();
+    zb_dev_t* dev = zb_get_device_list();
 
     while (dev != NULL)
     {
         if (dev->new_data_updated && dev->cluster_id != UNKNOWN_CLUSTER_ID)
         {
-            char *telemetry_msg = zb_get_device_telemetry_msg(dev);
+            char* telemetry_msg = zb_get_device_telemetry_msg(dev);
             esp_mqtt_client_publish(client, MQTT_PUB_TOPIC, telemetry_msg,
-                                    strlen(telemetry_msg), MQTT_QOS_LEVEL, 0);
+                strlen(telemetry_msg), MQTT_QOS_LEVEL, 0);
             free(telemetry_msg);
             telemetry_msg = NULL;
 
@@ -896,7 +937,7 @@ static void publish_new_data(void)
     }
 }
 
-static void wifi_task(void *arg)
+static void wifi_task(void* arg)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -918,11 +959,11 @@ static void wifi_task(void *arg)
     esp_wifi_init(&cfg);
 
     esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID,
-                                        &event_handler, NULL, NULL);
+        &event_handler, NULL, NULL);
     esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
-                                        &event_handler, NULL, NULL);
+        &event_handler, NULL, NULL);
     esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
-                                        &event_handler, NULL, NULL);
+        &event_handler, NULL, NULL);
 
     /* Clear wifi config on reset */
 #ifdef CLEAR_WIFI_CONFIG_ON_RESET
@@ -962,21 +1003,21 @@ static void wifi_task(void *arg)
         smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
         esp_smartconfig_start(&cfg);
         xEventGroupWaitBits(event_group, ESPTOUCH_DONE_BIT, true, false,
-                            portMAX_DELAY);
+            portMAX_DELAY);
         esp_smartconfig_stop();
         ESP_LOGI(TAG, "Smartconfig stop");
     }
 
     xEventGroupSetBits(event_group, WIFI_PROVISIONED_BIT);
     xEventGroupWaitBits(event_group, WIFI_CONNECTED_BIT, false, false,
-                        portMAX_DELAY);
+        portMAX_DELAY);
 
     char mqtt_borker[50];
 
 #ifndef USE_DEFAULT_MQTT_BROKER
     if (mqtt_get_uri(mqtt_server_uri) != ESP_OK)
         snprintf(mqtt_server_uri, sizeof(mqtt_server_uri),
-                 MQTT_BROKER_URL_DEFAULT);
+            MQTT_BROKER_URL_DEFAULT);
 #else
     snprintf(mqtt_server_uri, sizeof(mqtt_server_uri), MQTT_BROKER_URL_DEFAULT);
 #endif // USE_DEFAULT_MQTT_BROKER
@@ -1014,13 +1055,13 @@ enum
     LCD_SCREEN_MAX
 } lcd_screen = LCD_SCREEN_WIFI_MQTT_INFO;
 
-static void lcd_screen_change_callback(void *arg)
+static void lcd_screen_change_callback(void* arg)
 {
     if (++lcd_screen == LCD_SCREEN_MAX)
         lcd_screen = LCD_SCREEN_WIFI_MQTT_INFO;
 }
 
-static void lcd_task(void *arg)
+static void lcd_task(void* arg)
 {
     esp_timer_handle_t lcd_screen_timer;
 
@@ -1041,7 +1082,7 @@ static void lcd_task(void *arg)
 
     lcd5110_display_BK_logo(false);
     xEventGroupWaitBits(event_group, ZNP_COORD_STARTED_BIT, false, false,
-                        portMAX_DELAY);
+        portMAX_DELAY);
 
     esp_timer_start_periodic(lcd_screen_timer, LCD_SCREEN_CHANGE_INTERVAL_US);
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -1057,7 +1098,7 @@ static void lcd_task(void *arg)
         {
             lcd5110_goto_xy(10, 0);
             lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                         "WiFi Info");
+                "WiFi Info");
             if (uxBits & WIFI_CONNECTED_BIT)
             {
                 wifi_config_t wifi_cfg;
@@ -1065,38 +1106,38 @@ static void lcd_task(void *arg)
 
                 lcd5110_goto_xy(0, 12);
                 lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_3x5,
-                             "SSID: %.*s",
-                             strnlen((const char *)wifi_cfg.sta.ssid,
-                                     sizeof(wifi_cfg.sta.ssid)),
-                             (const char *)wifi_cfg.sta.ssid);
+                    "SSID: %.*s",
+                    strnlen((const char*)wifi_cfg.sta.ssid,
+                        sizeof(wifi_cfg.sta.ssid)),
+                    (const char*)wifi_cfg.sta.ssid);
 
                 lcd5110_goto_xy(0, 24);
                 lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_3x5,
-                             "IP: " IPSTR, IP2STR(&device_ipv4));
+                    "IP: " IPSTR, IP2STR(&device_ipv4));
 
                 lcd5110_goto_xy(0, 36);
                 lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_3x5,
-                             "BROKER:");
+                    "BROKER:");
 
                 lcd5110_goto_xy(4, 42);
                 lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_3x5, "%s",
-                             (uxBits & MQTT_CONNECTED_BIT)
-                                 ? mqtt_server_uri
-                                 : "Disconnected");
+                    (uxBits & MQTT_CONNECTED_BIT)
+                    ? mqtt_server_uri
+                    : "Disconnected");
             }
             else
             {
                 lcd5110_goto_xy(0, 12);
                 lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                             "WiFi Disconnected");
+                    "WiFi Disconnected");
                 if (!(uxBits & WIFI_PROVISIONED_BIT))
                 {
                     lcd5110_goto_xy(22, 30);
                     lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                                 "Running");
+                        "Running");
                     lcd5110_goto_xy(10, 40);
                     lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                                 "Smartconfig");
+                        "Smartconfig");
                 }
             }
             break;
@@ -1104,27 +1145,27 @@ static void lcd_task(void *arg)
 
         case LCD_SCREEN_DATE_TIME:
             lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                         "Date & Time");
+                "Date & Time");
             lcd5110_goto_xy(0, 12);
 
             time(&now);
             localtime_r(&now, &timeinfo);
             strftime(strftime_buf, sizeof(strftime_buf), DATE_STR_FORMAT,
-                     &timeinfo);
+                &timeinfo);
             lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                         strftime_buf);
+                strftime_buf);
 
             lcd5110_goto_xy(0, 24);
             strftime(strftime_buf, sizeof(strftime_buf), TIME_STR_FORMAT,
-                     &timeinfo);
+                &timeinfo);
             lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_5x7,
-                         strftime_buf);
+                strftime_buf);
 
             if (!(uxBits & RTC_DS1307_CONNECTED_BIT))
             {
                 lcd5110_goto_xy(48, 42);
                 lcd5110_puts(LCD5110_PIXEL_SET, LCD5110_FONT_SIZE_3x5,
-                             "RTC Error");
+                    "RTC Error");
             }
             break;
 
@@ -1134,7 +1175,7 @@ static void lcd_task(void *arg)
 
         lcd5110_refresh();
         vTaskDelayUntil(&xLastWakeTime,
-                        (1000 / LCD_REFRESH_RATE_HZ) / portTICK_PERIOD_MS);
+            (1000 / LCD_REFRESH_RATE_HZ) / portTICK_PERIOD_MS);
     }
 
     vTaskDelete(NULL);
@@ -1142,7 +1183,7 @@ static void lcd_task(void *arg)
 #endif // USE_LCD_TASK
 
 #ifdef USE_RTC_TASK
-void time_sync_notification_cb(struct timeval *tv)
+void time_sync_notification_cb(struct timeval* tv)
 {
     localtime_r(&tv->tv_sec, &timeinfo);
     ds1307_set_datetime(&timeinfo);
@@ -1168,7 +1209,7 @@ void ds1307_sq_handle(void)
     }
 }
 
-static void rtc_task(void *arg)
+static void rtc_task(void* arg)
 {
     ESP_LOGI(TAG, "Initializing SNTP");
     sntp_servermode_dhcp(1);
@@ -1194,7 +1235,7 @@ static void rtc_task(void *arg)
     ds1307_set_output_freq(DS1307_OUTPUT_FREQ_1HZ);
 
     xEventGroupWaitBits(event_group, ZNP_COORD_STARTED_BIT, false, false,
-                        portMAX_DELAY);
+        portMAX_DELAY);
 
     while (1)
     {

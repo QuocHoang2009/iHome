@@ -17,15 +17,18 @@ Từ Server xuống Hub mybk/down
 }
 
 {
-	"action": "link_dev",
+	"action": "command",
+	"command": "link_dev",
 	"btn_addr": "",
+	"btn_channel": ,
 	"relay_addr": "",
+	"relay_channel": ,
 }
 
 {
 	"action": "control",
 	"dev_addr": "00124B000418FD81",
-	"status1": "ON","OFF", "NONE"
-	"status2": "OFF",
-	"status3": "OFF"
+	"status1": "ON", "OFF", "NONE"
+	"status2": "ON", "OFF", "NONE"
+	"status3": "ON", "OFF", "NONE"
 }
