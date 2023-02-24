@@ -26,6 +26,15 @@ Từ Server xuống Hub mybk/down
 }
 
 {
+  "action": "command",
+  "command": "disconnect_dev",
+  "btn_addr": "64898651",
+  "btn_channel": 2,
+  "relay_addr": "00124B000418FD81",
+  "relay_channel": 1
+}
+
+{
 	"action": "control",
 	"dev_addr": "00124B000418FD81",
 	"status1": "ON", "OFF", "NONE"

@@ -141,9 +141,10 @@ export const updateDevice = async (req, res) => {
       controlRelay = {
         action: "control",
         dev_addr: relay.address,
-        status1: relay.channel === 1 ? (!relay.state ? "ON" : "OFF") : "NONE",
-        status2: relay.channel === 2 ? (!relay.state ? "ON" : "OFF") : "NONE",
-        status3: relay.channel === 3 ? (!relay.state ? "ON" : "OFF") : "NONE",
+        channel: relay.channel,
+        // status1: relay.channel === 1 ? (!relay.state ? "ON" : "OFF") : "NONE",
+        // status2: relay.channel === 2 ? (!relay.state ? "ON" : "OFF") : "NONE",
+        // status3: relay.channel === 3 ? (!relay.state ? "ON" : "OFF") : "NONE",
       };
     }
 
@@ -189,7 +190,8 @@ export const linkButton = async (req, res) => {
     const node = await Nodes.findById(button._id);
 
     const linkButtonRelay = {
-      action: "link_dev",
+      action: "command",
+      command: "link_dev",
       btn_addr: node.address,
       btn_channel: button.channel,
       relay_addr: channel.address,
@@ -232,7 +234,8 @@ export const disconnectButton = async (req, res) => {
     const node = await Nodes.findById(button._id);
 
     const disconnectButtonRelay = {
-      action: "disconnect_dev",
+      action: "command",
+      command: "disconnect_dev",
       btn_addr: node.address,
       btn_channel: button.channel,
       relay_addr: channel.address,
