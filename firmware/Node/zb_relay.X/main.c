@@ -23,7 +23,6 @@
 
 #define ZB_CONNECTED_BIT            BIT0
 #define SEND_TELEMETRY_TO_COORD_BIT BIT1
-#define RELAY_STATE_CHANGED_BIT	    BIT2
 #define NEW_BUTTON_NODE_ADDR        BIT3
 
 #define DEVICE_CLUSTER_ID           CLUSTER_ID_RELAY_CTRL
@@ -38,7 +37,6 @@
 #define RELAY_SET_STATE(num, state) RELAY_##num = !(state)
 
 EventBits_t uxBits;
-uint16_t button_node_addr = 0;
 
 union {
     uint8_t raw[2];
@@ -65,26 +63,26 @@ void relay_init(void) {
     RELAY_OFF(1);
     RELAY_OFF(2);
     RELAY_OFF(3);
-    xEventGroupClearBits(RELAY_STATE_CHANGED_BIT);
+    xEventGroupClearBits(SEND_TELEMETRY_TO_COORD_BIT);
 }
 
 void button1_handler(void) {
     if (!PORTBbits.RB5) {
         RELAY_TOGGLE(1);
-        xEventGroupSetBits(RELAY_STATE_CHANGED_BIT);
+        xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
     }
 }
 
 void button2_handler(void) {
     if (!PORTBbits.RB4) {
         RELAY_TOGGLE(2);
-        xEventGroupSetBits(RELAY_STATE_CHANGED_BIT);
+        xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
     }
 }
 
 void button3_handler(void) {
     RELAY_TOGGLE(3);
-    xEventGroupSetBits(RELAY_STATE_CHANGED_BIT);
+    xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
 }
 
 void button_init(void) {
@@ -107,21 +105,31 @@ void znp_msg_handler(uint16_t cmd, uint8_t* data, uint8_t len) {
             // data18:data19 = node button address
 
             uint8_t endpoint = data[6];
-
             if (endpoint == ENDPOINT_COMMAND) {
-                if (data[17] == 0) {
-                    if (data[18] & BIT5) RELAY_SET_STATE(1, data[18] & BIT0);
-                    if (data[18] & BIT6) RELAY_SET_STATE(2, data[18] & BIT1);
-                    if (data[18] & BIT7) RELAY_SET_STATE(3, data[18] & BIT2);
-                    xEventGroupSetBits(RELAY_STATE_CHANGED_BIT);
-                } else if (data[17] == 1) {
-                    button_node_addr = BUILD_UINT16(data[18], data[19]);
-                    xEventGroupSetBits(NEW_BUTTON_NODE_ADDR);
-                }
+                    if(data[18] == 1){
+                        RELAY_TOGGLE(1);
+                    }
+                    else if(data[18] == 2){
+                        RELAY_TOGGLE(2);
+                    }else if(data[18] == 3){
+                        RELAY_TOGGLE(3);
+                    }
+//                    if (data[18] & BIT5) RELAY_SET_STATE(1, data[18] & BIT0);
+//                    if (data[18] & BIT6) RELAY_SET_STATE(2, data[18] & BIT1);
+//                    if (data[18] & BIT7) RELAY_SET_STATE(3, data[18] & BIT2);
+                    xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
             } else if (endpoint == ENDPOINT_TELEMETRY) {
-                RELAY_SET_STATE(1, data[18] & BIT0);
-                RELAY_SET_STATE(2, data[18] & BIT1);
-                RELAY_SET_STATE(3, data[18] & BIT2);
+                if(data[18] == 1){
+                    RELAY_TOGGLE(1);
+                }
+                else if(data[18] == 2){
+                    RELAY_TOGGLE(2);
+                }else if(data[18] == 3){
+                    RELAY_TOGGLE(3);
+                }
+//                RELAY_SET_STATE(1, data[18] & BIT0);
+//                RELAY_SET_STATE(2, data[18] & BIT1);
+//                RELAY_SET_STATE(3, data[18] & BIT2);
                 xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
             }
         }
@@ -163,13 +171,6 @@ void main(void) {
 
     relay_data.raw[1] |= 0xE0; // bit mask is always set to 1
 
-    uint8_t button_node_lsb_addr
-            = (uint8_t) eeprom_read(BUTTON_NODE_LSB_ADDR_EEPROM_ADDR);
-    uint8_t button_node_msb_addr
-            = (uint8_t) eeprom_read(BUTTON_NODE_MSB_ADDR_EEPROM_ADDR);
-    button_node_addr
-            = BUILD_UINT16(button_node_lsb_addr, button_node_msb_addr);
-
     sys_tick_init();
     xEventGroupCreate();
     __delay_ms(100);
@@ -199,19 +200,6 @@ void main(void) {
         if (uxBits & SEND_TELEMETRY_TO_COORD_BIT) {
             znp_send_msg(COORDINATOR_ADDR, ENDPOINT_TELEMETRY, true);
             xEventGroupClearBits(SEND_TELEMETRY_TO_COORD_BIT);
-        }
-
-        if (uxBits & RELAY_STATE_CHANGED_BIT) {
-            znp_send_msg(COORDINATOR_ADDR, ENDPOINT_TELEMETRY, true);
-            if (button_node_addr != 0)
-                znp_send_msg(button_node_addr, ENDPOINT_TELEMETRY, true);
-            xEventGroupClearBits(RELAY_STATE_CHANGED_BIT);
-        }
-
-        if (uxBits & NEW_BUTTON_NODE_ADDR) {
-            eeprom_write(BUTTON_NODE_LSB_ADDR_EEPROM_ADDR, LSB(button_node_addr));
-            eeprom_write(BUTTON_NODE_LSB_ADDR_EEPROM_ADDR, MSB(button_node_addr));
-            xEventGroupClearBits(NEW_BUTTON_NODE_ADDR);
         }
 
         if (sys_tick_get_tick() - keepalive_tick >= 20) {
