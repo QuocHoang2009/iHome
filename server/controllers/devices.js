@@ -131,22 +131,18 @@ export const updateDevice = async (req, res) => {
     const relayControl = await Nodes.findOne({ address: relay.address });
 
     let controlRelay;
-    if (relayControl?.isADE === true) {
-      controlRelay = {
-        action: "control",
-        dev_addr: relay.address,
-        status: !relay.state ? "ON" : "OFF",
-      };
-    } else {
-      controlRelay = {
-        action: "control",
-        dev_addr: relay.address,
-        channel: relay.channel,
-        // status1: relay.channel === 1 ? (!relay.state ? "ON" : "OFF") : "NONE",
-        // status2: relay.channel === 2 ? (!relay.state ? "ON" : "OFF") : "NONE",
-        // status3: relay.channel === 3 ? (!relay.state ? "ON" : "OFF") : "NONE",
-      };
-    }
+    // if (relayControl?.isADE === true) {
+    //   controlRelay = {
+    //     action: "control",
+    //     dev_addr: relay.address,
+    //     channel: relay.channel,
+    //   };
+    // } else {
+    controlRelay = {
+      dev_addr: relay.address,
+      channel: relay.channel,
+    };
+    // }
 
     mqttSendMess(mqttPath, controlRelay);
 

@@ -35,6 +35,10 @@ const HomesSchema = new mongoose.Schema(
       type: Object,
       default: null,
     },
+    isActive: {
+      type: Boolean,
+      required: true,
+    },
   },
   { timestamps: true }
 );

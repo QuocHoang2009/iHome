@@ -3,12 +3,23 @@ import mongoose from "mongoose";
 const HomesMemberSchema = new mongoose.Schema(
   {
     home: {
-      type: Object,
+      type: String,
       require: true,
     },
     user: {
-      type: Object,
+      type: String,
       require: true,
+    },
+    access: {
+      type: String,
+      require: true,
+    },
+    privilege: {
+      type: String,
+      require: true,
+    },
+    rooms: {
+      type: Array,
     },
   },
   { timestamps: true }

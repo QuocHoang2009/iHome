@@ -19,6 +19,9 @@ export const addHomes = async (req, res) => {
     const newHomesMember = new HomesMember({
       home: savedHome._id,
       user: req.params.id,
+      access: "admin",
+      privilege: "host",
+      rooms: [],
     });
 
     await newHomesMember.save();
@@ -45,15 +48,59 @@ export const getAllHomes = async (req, res) => {
     const { id } = req.params;
     const membersHomes = await HomesMember.find({ user: id });
 
+    // const promises = await membersHomes.map(async (membersHome) => {
+    //   const home = new Promise((resolve, reject) => {
+    //     resolve(Homes.findById(membersHome.home));
+    //   });
+    //   // const homeReturn = { ...home, ...membersHome };
+
+    //   return { ...home, ...membersHome };
+    // });
+
+    // const homes = await Promise.all(promises);
+    // // const promises_2 = await homes.map(async (home, index) => {
+    // //   return { ...home, ...membersHomes[index] };
+    // // });
+    // // const homesReturn = await Promise.all(promises_2);
+    // console.log(homes);
+    res.status(200).json(membersHomes);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const getAllHomesUsers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const membersHomes = await HomesMember.find({ user: id });
+
     const promises = await membersHomes.map(async (membersHome) => {
       const home = new Promise((resolve, reject) => {
         resolve(Homes.findById(membersHome.home));
       });
+
       return home;
     });
 
     const homes = await Promise.all(promises);
+
     res.status(200).json(homes);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const getHomeUser = async (req, res) => {
+  try {
+    const { homeId, userId } = req.params;
+    console.log(req.params);
+    const membersHome = await HomesMember.findOne({
+      // home: homeId,
+      user: userId,
+    });
+    console.log(membersHome);
+
+    res.status(200).json(membersHome);
   } catch (err) {
     res.status(404).json({ message: err.message });
   }

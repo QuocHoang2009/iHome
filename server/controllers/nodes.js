@@ -11,6 +11,8 @@ import Rooms from "../models/Rooms.js";
 import Sensors from "../models/Sensors.js";
 dotenv.config();
 
+import fs from "fs";
+
 const relayType = "Relay";
 const buttonType = "Button";
 const sensorType = "Sensor";
@@ -23,7 +25,24 @@ export const setChangeState = (state) => {
 
 let node;
 
-const client = mqtt.connect(process.env.BROKER_URL);
+let caFile = fs.readFileSync(
+  "D:\\LuanVan\\iHome\\server\\public\\files\\mosquitto.org.crt"
+);
+let certFile = fs.readFileSync(
+  "D:\\LuanVan\\iHome\\server\\public\\files\\client.crt"
+);
+let keyFile = fs.readFileSync(
+  "D:\\LuanVan\\iHome\\server\\public\\files\\client.key"
+);
+
+let opts = {
+  rejectUnauthorized: false,
+  cert: certFile,
+  key: keyFile,
+  connectTimeout: 5000,
+};
+
+const client = mqtt.connect(process.env.BROKER_URL, opts);
 
 client.on("error", (error) => console.log("error", error.message));
 
@@ -54,13 +73,13 @@ const updateADE = async (relayNode, message) => {
   const channel = await Channels.findById(relayNode.channels[0]);
 
   if (
-    (channel.state && message?.status === "OFF") ||
-    (channel.state === false && message?.status === "ON")
+    (channel?.state && message?.status === "OFF") ||
+    (channel?.state === false && message?.status === "ON")
   ) {
     changeState = true;
     await Channels.findByIdAndUpdate(
       { _id: relayNode.channels[0] },
-      { state: message?.status === "ON" ? true : false }
+      { state: message?.status === "ON" ? true : false, isActive: true }
     );
   }
 
@@ -81,6 +100,7 @@ const updateSensor = async (relayNode, message) => {
       temp: message.temp,
       humidity: message.humidity,
       airquality: message.airquality,
+      isActive: true,
     }
   );
 };
@@ -88,10 +108,12 @@ const updateSensor = async (relayNode, message) => {
 const mqttHandle = async (topic, payload) => {
   try {
     const message = JSON.parse(payload.toString());
+    console.log(topic);
+    console.log(message);
 
-    if (message?.action === "provision") {
+    if (topic.includes("mybk/up/provision")) {
       node = message;
-    } else if (message?.action === "telemetry") {
+    } else if (topic.includes("mybk/up/telemetry")) {
       const nodeTemp = await Nodes.findOne({ address: message?.dev_addr });
       if (nodeTemp?.type === relayType) {
         if (nodeTemp?.isADE === true) {
@@ -101,6 +123,30 @@ const mqttHandle = async (topic, payload) => {
         }
       } else if (nodeTemp?.type === sensorType) {
         updateSensor(nodeTemp, message);
+      }
+    } else if (topic.includes("mybk/up/status")) {
+      if (message?.status === "offline") {
+        await Homes.findOneAndUpdate(
+          { mqttPath: message?.home },
+          { isActive: false }
+        );
+      } else {
+        await Homes.findOneAndUpdate(
+          { mqttPath: message?.home },
+          { isActive: true }
+        );
+      }
+    } else if (topic.includes("mybk/up/device_status")) {
+      if (message?.status === "offline") {
+        await Nodes.findOneAndUpdate(
+          { address: message?.dev_addr },
+          { isActive: false }
+        );
+      } else {
+        await Nodes.findOneAndUpdate(
+          { address: message?.dev_addr },
+          { isActive: true }
+        );
       }
     }
   } catch (err) {
@@ -235,6 +281,35 @@ export const getAllNodes = async (req, res) => {
   }
 };
 
+export const getAllNodesRelay = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let allNodes = await Nodes.find({ home: id, type: relayType });
+
+    const promises = await allNodes.map(async (node) => {
+      if (node?.channels) {
+        const promises2 = await node.channels.map(async (channelId) => {
+          const channel = new Promise((resolve, reject) => {
+            resolve(Channels.findById(channelId));
+          });
+          return channel;
+        });
+
+        const channels = await Promise.all(promises2);
+        node.channels = channels;
+        return node;
+      }
+
+      return node;
+    });
+
+    allNodes = await Promise.all(promises);
+    res.status(200).json(allNodes);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
 export const getNode = async (req, res) => {
   try {
     const { id } = req.params;
@@ -296,12 +371,10 @@ export const deleteNode = async (req, res) => {
     const node = await Nodes.findById({ _id: id });
 
     const leaveRequest = {
-      action: "command",
-      command: "leave_req",
       dev_addr: node.address,
     };
 
-    mqttSendMess(home.mqttPath, leaveRequest);
+    mqttSendMess(home.mqttPath + "/leave_req", leaveRequest);
 
     const promises = await node?.channels.map(async (channel) => {
       const channelFind = new Promise((resolve, reject) => {

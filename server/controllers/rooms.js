@@ -39,7 +39,7 @@ export const deleteRoom = async (req, res) => {
 
     await Channels.findOneAndUpdate(
       { address: room?.relay?.address, channel: room?.relay?.channel },
-      { linkWithDevice: "" },
+      { linkWithDevice: "", link: "" },
       { new: true }
     );
 

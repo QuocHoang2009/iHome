@@ -13,6 +13,7 @@ import adesRoutes from "./routes/ades.js";
 import authRoutes from "./routes/auth.js";
 import devicesRoutes from "./routes/devices.js";
 import homesRoutes from "./routes/homes.js";
+import membersRoutes from "./routes/members.js";
 import nodesRoutes from "./routes/nodes.js";
 import roomsRoutes from "./routes/rooms.js";
 import userRoutes from "./routes/users.js";
@@ -58,6 +59,7 @@ app.use("/homes", homesRoutes);
 app.use("/rooms", roomsRoutes);
 app.use("/devices", devicesRoutes);
 app.use("/ades", adesRoutes);
+app.use("/members", membersRoutes);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 6001;
