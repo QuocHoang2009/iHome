@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { setCurrentHome, setHomes } from "../app/state";
 import DefaultLayout from "../components/DefaultLayout";
 import { getAllHomes } from "../const/API";
@@ -29,6 +29,7 @@ const Pages = () => {
 
   return (
     <Routes>
+      <Route path={`/`} element={<Navigate to="/home" />} />
       {sidebarItems.map((item, key) => {
         let Page = item.component;
         if (item.title !== "Nodes" && item.title !== "Members") {

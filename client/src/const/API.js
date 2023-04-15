@@ -39,8 +39,8 @@ export const disconnectButtonApi = host + "/devices/disconnectbutton";
 export const editDevice = host + "/devices/edit/";
 
 //get information relayADE
-export const inforADE = host + "/ades/";
-export const inforSensor = host + "/sensor/";
+export const inforADE = host + "/nodes/ades/";
+export const inforSensor = host + "/nodes/sensor/";
 
 //member
 export const getAllMembers = host + "/members/all/";

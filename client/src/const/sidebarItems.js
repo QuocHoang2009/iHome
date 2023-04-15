@@ -18,7 +18,7 @@ import RoomsPage from "../pages/roomsPage";
 const sidebarItems = [
   {
     title: "Home",
-    path: "/",
+    path: "/home",
     icon: <HomeOutlinedIcon />,
     component: HomePage,
   },
