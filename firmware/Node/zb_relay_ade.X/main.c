@@ -67,9 +67,8 @@ void button_init(void) {
 void znp_msg_handler(uint16_t cmd, uint8_t* data, uint8_t len) {
     switch (cmd) {
         case AF_INCOMING_MSG:
-            if ((data[6] == data[7]) && (data[6] == ENDPOINT_COMMAND)) {
-                if (data[17]) RELAY_ON();
-                else RELAY_OFF();
+            if ((data[6] == data[7]) && (data[6] == ENDPOINT_COMMAND) || data[6] == ENDPOINT_TELEMETRY) {
+                RELAY_TOGGLE();
                 xEventGroupSetBits(RELAY_STATE_CHANGED_BIT);
             }
             break;

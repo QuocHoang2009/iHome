@@ -1,9 +1,164 @@
 Từ Hub gửi lên server mybk/up
+
+Gói tin lastwill:
+TOPIC: mybk/up/status
+PAYLOAD: 	{
+			"home": "mybk/down", //ma cua nha (moi hub se có một mã riêng)
+			"status": "offline"
+		}
+retainFlag: 1
+
+
+Gói tin hub status:
+TOPIC: mybk/up/status
+PAYLOAD: 	{
+			"home": "mybk/down", //ma cua nha (moi hub se có một mã riêng)
+			"status": "online"
+		}
+retainFlag: 1
+
+
+Gói tin hub status:
+TOPIC: mybk/up/device_status/ + addr
+PAYLOAD: 	{
+			"addr": "64898651", //địa chỉ của node
+			"status": "online", "offline"
+		}
+retainFlag: 1
+
+
+Gói tin provision:
+TOPIC: mybk/up/provision
+PAYLOAD: 	{
+			"dev_addr": "64898651", //địa chỉ của node
+			"type": "Relay", "Button", "Sensor"
+			"numChannel": 3
+		}
+retainFlag: 0
+
+Gói tin telemetry:
+TOPIC: mybk/up/telemetry/ + dev_addr
+//đối với sensor
+PAYLOAD: 	{
+			"action": "telemetry",
+			"dev_addr": ".." (địa chỉ của thiết bị gửi lên),
+			"attributes": {
+				"temperature": 25,
+				"humidity": 40,
+				"air_quality" : 0.2
+			}
+		}
+retainFlag: 1
+
+//đối với relay
+PAYLOAD: 	{
+			"action": "telemetry",
+			"dev_addr": ".." (địa chỉ của thiết bị gửi lên),
+			"status1" : "ON"/"OFF",
+			"status2" : "ON"/"OFF",
+			"status3" : "ON"/"OFF"
+		}
+retainFlag: 1
+
+//đối với ade
+PAYLOAD: 	{
+			"action": "telemetry",
+			"dev_addr": ".." (địa chỉ của thiết bị gửi lên),
+			"status": true,
+			"attributes": {
+				"irms": 25,
+				"vrms": 40,
+				"power" : 0.2
+			}
+		}
+retainFlag: 1
+
+
+Từ server gửi xuống hub mybk/down
+
+Gói tin hub status:
+
+//Gói tin thêm thiết bị mới
+TOPIC: mybk/down/permit_join
+PAYLOAD: 	{
+			"command": "permit_join"
+		}
+retainFlag: 0
+
+//gói tin yêu cầu một node rời khỏi mạng
+TOPIC: mybk/down/leave_req
+PAYLOAD: 	{
+			"dev_addr": ".." (địa chỉ của thiết bị rời đi)
+		}
+retainFlag: 0
+
+
+//gói tin điều khiển thiết bị
+TOPIC: mybk/down/control
+PAYLOAD: 	{
+			"dev_addr": "00124B000418FD81",
+			"channel": 1,2,3
+		}
+retainFlag: 0
+
+//gói tin liên kêt nút nhấn và relay
+TOPIC: mybk/down/link_dev
+PAYLOAD: 	{
+			"btn_addr": "00124B000418FD81",
+			"btn_channel": 1,2,3
+			"relay_addr": "00124B000418FD81",
+			"relay_channel": 1,2,3
+		}
+retainFlag: 0
+
+//gói tin hủy liên kêt nút nhấn và relay
+TOPIC: mybk/down/ldisconnect_dev
+PAYLOAD: 	{
+			"btn_addr": "00124B000418FD81",
+			"btn_channel": 1,2,3
+			"relay_addr": "00124B000418FD81",
+			"relay_channel": 1,2,3
+		}
+retainFlag: 0
+
+
+
+
+Từ Hub gửi lên server mybk/up
 {
 	"action": "provision",
 	"dev_addr": "64898651", //địa chỉ của node
 	"type": "Relay", "Button", "Sensor"
 	"numChannel": 3
+}
+
+{
+	"action": "telemetry",
+	"dev_addr": ".." (địa chỉ của thiết bị gửi lên),
+	"attributes": {
+		"temperature": 25,
+		"humidity": 40,
+		"air_quality" : 0.2
+	}
+}
+
+{
+	"action": "telemetry",
+	"dev_addr": ".." (địa chỉ của thiết bị gửi lên),
+	"status1" : "ON"/"OFF",
+	"status2" : "ON"/"OFF",
+	"status3" : "ON"/"OFF"
+}
+
+{
+	"action": "telemetry",
+	"dev_addr": ".." (địa chỉ của thiết bị gửi lên),
+	"status": true,
+	"attributes": {
+		"irms": 25,
+		"vrms": 40,
+		"power" : 0.2
+	}
 }
 
 

@@ -105,7 +105,7 @@ void znp_msg_handler(uint16_t cmd, uint8_t* data, uint8_t len) {
             // data18:data19 = node button address
 
             uint8_t endpoint = data[6];
-            if (endpoint == ENDPOINT_COMMAND) {
+            if (endpoint == ENDPOINT_COMMAND || endpoint == ENDPOINT_TELEMETRY) {
                     if(data[18] == 1){
                         RELAY_TOGGLE(1);
                     }
@@ -114,23 +114,7 @@ void znp_msg_handler(uint16_t cmd, uint8_t* data, uint8_t len) {
                     }else if(data[18] == 3){
                         RELAY_TOGGLE(3);
                     }
-//                    if (data[18] & BIT5) RELAY_SET_STATE(1, data[18] & BIT0);
-//                    if (data[18] & BIT6) RELAY_SET_STATE(2, data[18] & BIT1);
-//                    if (data[18] & BIT7) RELAY_SET_STATE(3, data[18] & BIT2);
                     xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
-            } else if (endpoint == ENDPOINT_TELEMETRY) {
-                if(data[18] == 1){
-                    RELAY_TOGGLE(1);
-                }
-                else if(data[18] == 2){
-                    RELAY_TOGGLE(2);
-                }else if(data[18] == 3){
-                    RELAY_TOGGLE(3);
-                }
-//                RELAY_SET_STATE(1, data[18] & BIT0);
-//                RELAY_SET_STATE(2, data[18] & BIT1);
-//                RELAY_SET_STATE(3, data[18] & BIT2);
-                xEventGroupSetBits(SEND_TELEMETRY_TO_COORD_BIT);
             }
         }
             break;
