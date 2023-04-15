@@ -1,6 +1,6 @@
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
-import DevicesOtherIcon from "@mui/icons-material/DevicesOther";
 import DeviceThermostatIcon from "@mui/icons-material/DeviceThermostat";
+import DevicesOtherIcon from "@mui/icons-material/DevicesOther";
 import DoorFrontIcon from "@mui/icons-material/DoorFront";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";

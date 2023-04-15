@@ -6,13 +6,15 @@ export const loginUser = host + "/auth/login";
 
 //node
 export const getAllNodes = host + "/nodes/all";
-export const getAllRelays = host + "/nodes/allrelay";
+export const getAllRelays = host + "/nodes/allRelay/";
 export const addNode = host + "/nodes/addnode/";
 export const nodeApi = host + "/nodes/";
 export const editNode = host + "/nodes/edit/";
 
 //home
 export const getAllHomes = host + "/homes/all/";
+export const getAllUserHomes = host + "/homes/allUser/";
+export const getUserHome = host + "/homes/usershome";
 export const getHome = host + "/homes/";
 export const addHome = host + "/homes/addhome/";
 export const linkHome = host + "/homes";
@@ -39,6 +41,11 @@ export const editDevice = host + "/devices/edit/";
 //get information relayADE
 export const inforADE = host + "/ades/";
 export const inforSensor = host + "/sensor/";
+
+//member
+export const getAllMembers = host + "/members/all/";
+export const getMembersByEmail = host + "/members/findbyemail";
+export const memberHomeApi = host + "/members";
 
 //img http://localhost:3001/assets/
 export const getImg = `http://localhost:3001/assets/`;
