@@ -112,7 +112,7 @@ export const linkHomes = async (req, res) => {
 
     const homeReturn = await Homes.findByIdAndUpdate(home, { relay: relay });
     await Channels.findByIdAndUpdate(relay, { link: home, typeLink: "Home" });
-    console.log(homeReturn);
+
     res.status(201).json(homeReturn);
   } catch (err) {
     res.status(404).json({ message: err.message });

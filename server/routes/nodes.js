@@ -6,6 +6,7 @@ import {
   getAllNodes,
   getAllNodesRelay,
   getNode,
+  getRelay,
 } from "../controllers/nodes.js";
 
 const router = express.Router();
@@ -17,5 +18,6 @@ router.get("/allRelay/:id", getAllNodesRelay);
 router.delete("/:homeId/:id", deleteNode);
 router.get("/:id", getNode);
 router.patch("/edit/:id", editNode);
+router.get("/relay/:id", getRelay);
 
 export default router;

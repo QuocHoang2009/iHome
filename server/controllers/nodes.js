@@ -11,8 +11,6 @@ import Rooms from "../models/Rooms.js";
 import Sensors from "../models/Sensors.js";
 dotenv.config();
 
-import fs from "fs";
-
 const relayType = "Relay";
 const buttonType = "Button";
 const sensorType = "Sensor";
@@ -23,26 +21,26 @@ export const setChangeState = (state) => {
   changeState = state;
 };
 
-let node;
+// let node;
 
-let caFile = fs.readFileSync(
-  "D:\\LuanVan\\iHome\\server\\public\\files\\mosquitto.org.crt"
-);
-let certFile = fs.readFileSync(
-  "D:\\LuanVan\\iHome\\server\\public\\files\\client.crt"
-);
-let keyFile = fs.readFileSync(
-  "D:\\LuanVan\\iHome\\server\\public\\files\\client.key"
-);
+// let caFile = fs.readFileSync(
+//   "D:\\LuanVan\\iHome\\server\\public\\files\\mosquitto.org.crt"
+// );
+// let certFile = fs.readFileSync(
+//   "D:\\LuanVan\\iHome\\server\\public\\files\\client.crt"
+// );
+// let keyFile = fs.readFileSync(
+//   "D:\\LuanVan\\iHome\\server\\public\\files\\client.key"
+// );
 
-let opts = {
-  rejectUnauthorized: false,
-  cert: certFile,
-  key: keyFile,
-  connectTimeout: 5000,
-};
+// let opts = {
+//   rejectUnauthorized: false,
+//   cert: certFile,
+//   key: keyFile,
+//   connectTimeout: 5000,
+// };
 
-const client = mqtt.connect(process.env.BROKER_URL, opts);
+const client = mqtt.connect(process.env.BROKER_URL);
 
 client.on("error", (error) => console.log("error", error.message));
 
@@ -449,5 +447,16 @@ export const editNode = async (req, res) => {
     res.status(201).json("Change status success!!");
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const getRelay = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let relay = await Channels.findById(id);
+
+    res.status(200).json(relay);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
   }
 };
