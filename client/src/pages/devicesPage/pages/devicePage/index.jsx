@@ -26,6 +26,7 @@ import HeaderChild from '../../../../components/HeaderChild';
 import ModalDelete from '../../../../components/ModalDelete';
 import RelaysDialog from '../../../../components/RelaysDialog';
 import {
+    ADMIN,
     deviceApi,
     disconnectButtonApi,
     disconnectRelay,
@@ -313,9 +314,9 @@ const DevicePage = () => {
     initialValues.room = currentDevice?.room?._id;
 
     const handleClick = (params) => {
-        if (params.field === 'delete' && currentHome?.access !== 'user') {
+        if (params.field === 'delete' && currentHome?.access === ADMIN) {
             handleDelete(params.row);
-        } else if (params.field === 'name' && currentHome?.access !== 'user') {
+        } else if (params.field === 'name' && currentHome?.access === ADMIN) {
             navigate('/nodes/' + params.row._id);
         } else if (params.field === 'state') {
             handleChangeState(params.row);
@@ -531,7 +532,7 @@ const DevicePage = () => {
                         />
                     </Box>
                 ) : (
-                    currentHome?.access === 'admin' && (
+                    currentHome?.access === ADMIN && (
                         <Box
                             width="150px"
                             height="40px"
@@ -562,57 +563,59 @@ const DevicePage = () => {
                 open={openModalLink}
                 onClose={handleCloseModalLink}
             />
+            {currentHome?.access === ADMIN && (
+                <BoxEdit
+                    title="Button"
+                    button={currentHome?.access === ADMIN && 'Add Button'}
+                    buttonHandle={handleClickOpenModalButton}
+                >
+                    {currentDevice?.relay && (
+                        <Box
+                            m="10px 0 0 0"
+                            height="48vh"
+                            sx={{
+                                '& .MuiDataGrid-root': {
+                                    border: 'none',
+                                },
+                                '& .MuiDataGrid-cell': {
+                                    borderBottom: 'none',
+                                },
+                                '& .name-column--cell': {
+                                    color: colors.greenAccent[300],
+                                },
+                                '& .MuiDataGrid-columnHeaders': {
+                                    backgroundColor: colors.blueAccent[700],
+                                    borderBottom: 'none',
+                                },
+                                '& .MuiDataGrid-virtualScroller': {
+                                    backgroundColor: colors.primary[400],
+                                },
+                                '& .MuiDataGrid-footerContainer': {
+                                    borderTop: 'none',
+                                    backgroundColor: colors.blueAccent[700],
+                                },
+                                '& .MuiCheckbox-root': {
+                                    color: `${colors.greenAccent[200]} !important`,
+                                },
+                            }}
+                        >
+                            <DataGrid
+                                rows={buttons?.map((button, index) => {
+                                    return {
+                                        ...button,
+                                        id: index + 1,
+                                    };
+                                })}
+                                columns={buttonColumns}
+                                pageSize={100}
+                                rowsPerPageOptions={[100]}
+                                onCellClick={handleClickButtonTable}
+                            />
+                        </Box>
+                    )}
+                </BoxEdit>
+            )}
 
-            <BoxEdit
-                title="Button"
-                button={currentHome?.access === 'admin' && 'Add Button'}
-                buttonHandle={handleClickOpenModalButton}
-            >
-                {currentDevice?.relay && (
-                    <Box
-                        m="10px 0 0 0"
-                        height="48vh"
-                        sx={{
-                            '& .MuiDataGrid-root': {
-                                border: 'none',
-                            },
-                            '& .MuiDataGrid-cell': {
-                                borderBottom: 'none',
-                            },
-                            '& .name-column--cell': {
-                                color: colors.greenAccent[300],
-                            },
-                            '& .MuiDataGrid-columnHeaders': {
-                                backgroundColor: colors.blueAccent[700],
-                                borderBottom: 'none',
-                            },
-                            '& .MuiDataGrid-virtualScroller': {
-                                backgroundColor: colors.primary[400],
-                            },
-                            '& .MuiDataGrid-footerContainer': {
-                                borderTop: 'none',
-                                backgroundColor: colors.blueAccent[700],
-                            },
-                            '& .MuiCheckbox-root': {
-                                color: `${colors.greenAccent[200]} !important`,
-                            },
-                        }}
-                    >
-                        <DataGrid
-                            rows={buttons?.map((button, index) => {
-                                return {
-                                    ...button,
-                                    id: index + 1,
-                                };
-                            })}
-                            columns={buttonColumns}
-                            pageSize={100}
-                            rowsPerPageOptions={[100]}
-                            onCellClick={handleClickButtonTable}
-                        />
-                    </Box>
-                )}
-            </BoxEdit>
             <ButtonsDialog
                 selectedValue={selectedButton}
                 open={openModalButton}

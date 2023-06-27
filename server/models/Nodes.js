@@ -25,6 +25,12 @@ const NodesSchema = new mongoose.Schema(
       min: 2,
       max: 50,
     },
+    link: {
+      type: String,
+    },
+    typeLink: {
+      type: String,
+    },
     numChannel: {
       type: Number,
     },

@@ -1,6 +1,7 @@
 import Channels from "../models/Channels.js";
 import Homes from "../models/Homes.js";
 import HomesMember from "../models/HomesMember.js";
+import Nodes from "../models/Nodes.js";
 
 export const addHomes = async (req, res) => {
   try {
@@ -93,12 +94,10 @@ export const getAllHomesUsers = async (req, res) => {
 export const getHomeUser = async (req, res) => {
   try {
     const { homeId, userId } = req.params;
-    console.log(req.params);
     const membersHome = await HomesMember.findOne({
-      // home: homeId,
+      home: homeId,
       user: userId,
     });
-    console.log(membersHome);
 
     res.status(200).json(membersHome);
   } catch (err) {
@@ -135,7 +134,40 @@ export const unLinkHome = async (req, res) => {
       { new: true }
     );
 
-    console.log(homeReturn);
+    res.status(201).json(homeReturn);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const linkHomesSensor = async (req, res) => {
+  try {
+    const { home, sensor } = req.body.body;
+
+    const homeReturn = await Homes.findByIdAndUpdate(home, { sensor: sensor });
+    await Nodes.findByIdAndUpdate(sensor, { link: home, typeLink: "Home" });
+
+    res.status(201).json(homeReturn);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+export const unLinkHomeSensor = async (req, res) => {
+  try {
+    const { sensor, home } = req.body.body;
+
+    const homeReturn = await Homes.findOneAndUpdate(
+      { _id: home },
+      { sensor: null },
+      { new: true }
+    );
+
+    await Nodes.findOneAndUpdate(
+      { _id: sensor },
+      { typeLink: "", link: "" },
+      { new: true }
+    );
 
     res.status(201).json(homeReturn);
   } catch (err) {

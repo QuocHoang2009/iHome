@@ -9,13 +9,20 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
-import { setRooms } from '../../../../app/state';
 import { tokens } from '../../../../app/theme';
 import ButtonStyle from '../../../../components/ButtonStyle';
 import HeaderChild from '../../../../components/HeaderChild';
 import ModalDelete from '../../../../components/ModalDelete';
 import RelaysDialog from '../../../../components/RelaysDialog';
-import { addRoom, getAllRooms, linkRoom, roomApi, updateRoom } from '../../../../const/API';
+import {
+    ADMIN,
+    USER,
+    addRoom,
+    changeStateRelay,
+    getAllRooms,
+    linkRoomRelay,
+    roomApi,
+} from '../../../../const/API';
 
 const initialValues = {
     name: '',
@@ -33,6 +40,7 @@ const MainPage = () => {
     const currentHome = useSelector((state) => state.currentHome);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
     const [isAdd, setIsAdd] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [roomSelect, setRoomSelect] = useState();
@@ -51,14 +59,11 @@ const MainPage = () => {
             setSelectedValueLink(value);
             const data = {
                 room: roomSelect._id,
-                relay: {
-                    address: value.address,
-                    channel: value.channel,
-                },
+                relay: value.channels[value.channel - 1]._id,
             };
 
             await axios
-                .post(linkRoom, {
+                .patch(linkRoomRelay, {
                     body: data,
                 })
                 .then((res) => {
@@ -79,16 +84,14 @@ const MainPage = () => {
             if (home?._id) {
                 const apiGetRooms = getAllRooms + home?._id;
                 const res = await axios.get(apiGetRooms);
-                if (currentHome?.access === 'user' && currentHome?.rooms?.length !== 0) {
+                if (currentHome?.access === 'user' && currentHome?.rooms.length !== 0) {
                     const roomsTmp = res.data?.filter(
                         (room) =>
                             currentHome?.rooms?.findIndex((roomId) => room?._id === roomId) !== -1,
                     );
                     setRoomsPage(roomsTmp);
-                    dispatch(setRooms({ rooms: roomsTmp }));
                 } else {
                     setRoomsPage(res.data);
-                    dispatch(setRooms({ rooms: res.data }));
                 }
             }
         })();
@@ -118,13 +121,16 @@ const MainPage = () => {
             field: 'state',
             headerName: 'State',
             flex: 1,
-            renderCell: ({ row: { relay, state } }) => {
+            renderCell: ({ row: { relay } }) => {
+                const access = currentHome?.access === ADMIN && !relay;
                 return (
                     <Box>
-                        {!relay ? (
-                            <ButtonStyle name="LINK" width="75px" height="35px" />
-                        ) : (
-                            <FormControlLabel value={state} control={<Switch checked={state} />} />
+                        {access && <ButtonStyle name="LINK" width="75px" height="35px" />}{' '}
+                        {relay && (
+                            <FormControlLabel
+                                value={relay.state}
+                                control={<Switch checked={relay.state} />}
+                            />
                         )}
                     </Box>
                 );
@@ -136,15 +142,17 @@ const MainPage = () => {
             flex: 1,
             renderCell: () => {
                 return (
-                    <Box
-                        sx={{
-                            '&:hover': {
-                                cursor: 'pointer',
-                            },
-                        }}
-                    >
-                        <DeleteIcon />
-                    </Box>
+                    currentHome?.access === ADMIN && (
+                        <Box
+                            sx={{
+                                '&:hover': {
+                                    cursor: 'pointer',
+                                },
+                            }}
+                        >
+                            <DeleteIcon />
+                        </Box>
+                    )
                 );
             },
         },
@@ -202,14 +210,13 @@ const MainPage = () => {
 
     const handleChangeState = async (room) => {
         const data = {
-            mqttPath: home?.mqttPath + '/control',
-            relay: room.relay,
-            id: room._id,
-            state: !room.state,
+            mqttPath: home?.mqttPath,
         };
 
+        const api = changeStateRelay + room.relay;
+
         await axios
-            .patch(updateRoom, {
+            .patch(api, {
                 body: data,
             })
             .then((res) => {
@@ -230,7 +237,7 @@ const MainPage = () => {
     };
 
     const handleClick = (params) => {
-        if (params.field === 'delete' && currentHome?.access !== 'user') {
+        if (params.field === 'delete' && currentHome?.access === ADMIN) {
             handleDelete(params.row);
         } else if (params.field === 'name') {
             navigate('/rooms/' + params.row._id);
@@ -238,7 +245,7 @@ const MainPage = () => {
             if (params.row.relay) {
                 handleChangeState(params.row);
             } else {
-                if (currentHome?.access !== 'user') handleLink(params.row);
+                if (currentHome?.access === ADMIN) handleLink(params.row);
             }
         }
     };
@@ -248,7 +255,7 @@ const MainPage = () => {
             <HeaderChild
                 title="Rooms"
                 subtitle="Managing the Rooms"
-                addButton={currentHome?.access !== 'user' && 'Add Room'}
+                addButton={currentHome?.access !== USER && 'Add Room'}
                 buttonHandle={buttonHandle}
             />
 

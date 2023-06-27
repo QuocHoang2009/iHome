@@ -32,7 +32,8 @@ TOPIC: mybk/up/provision
 PAYLOAD: 	{
 			"dev_addr": "64898651", //địa chỉ của node
 			"type": "Relay", "Button", "Sensor"
-			"numChannel": 3
+			"numChannel": 3,
+			"isADE": true/false
 		}
 retainFlag: 0
 
@@ -196,3 +197,8 @@ Từ Server xuống Hub mybk/down
 	"status2": "ON", "OFF", "NONE"
 	"status3": "ON", "OFF", "NONE"
 }
+
+3 ô nhỏ cho nhiệt độ, độ ẩm, clkk
+1 chart công suất tiêu thụ
+
+2 chart điện
